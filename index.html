@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Flight RAYdar">
+<title>Flight RAYdar</title>
+<style>
+  :root{
+    --bg: #0B0F14;
+    --bg-panel: #11161D;
+    --bg-raised: #161D26;
+    --amber: #F2C879;
+    --amber-dim: #8A6F3F;
+    --cyan: #5FD4D4;
+    --cyan-dim: #1E4A4A;
+    --slate: #5A6472;
+    --slate-bright: #8C97A6;
+    --warn: #E0584A;
+    --climb: #6FCF7A;
+    --descend: #E0A85F;
+    --line: #1C232C;
+    --mono: 'SF Mono', 'Courier New', monospace;
+    --grot: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--amber);
+    font-family: var(--grot);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 18px 9px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .brand {
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    color: var(--amber);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .brand span { color: var(--cyan); }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .status-line {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--slate);
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    animation: pulse 2.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .dot.warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  .pill-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--slate-bright);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    padding: 5px 9px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pill-btn:active { transform: scale(0.96); }
+  .pill-btn.active {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(95,212,212,0.08);
+  }
+  .pill-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+  }
+  .pill-group .glabel {
+    font-size: 9px;
+    color: var(--slate);
+    letter-spacing: 0.08em;
+    margin-right: 2px;
+  }
+
+  /* ===== LOCATION PICKER ===== */
+  .loc-picker { position: relative; }
+  .loc-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--slate-bright);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    padding: 5px 9px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 170px;
+    overflow: hidden;
+  }
+  .loc-btn .pin { color: var(--amber); font-size: 11px; flex-shrink: 0; }
+  .loc-btn .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .loc-btn:active { transform: scale(0.97); }
+
+  .loc-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 60;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px;
+    width: 260px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+  }
+  .loc-panel.open { display: block; }
+  .loc-panel .preset {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--slate-bright);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 9px 4px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .loc-panel .preset:last-of-type { border-bottom: none; }
+  .loc-panel .preset:active { color: var(--cyan); }
+  .loc-panel .preset .code { color: var(--amber); font-weight: 600; margin-right: 8px; }
+  .loc-panel .preset.active { color: var(--cyan); }
+
+  .loc-custom { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .loc-custom .lbl { font-family: var(--mono); font-size: 9px; color: var(--slate); letter-spacing: 0.1em; margin-bottom: 6px; }
+  .loc-custom .row2 { display: flex; gap: 6px; margin-bottom: 8px; }
+  .loc-custom input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--amber);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 7px 8px;
+    border-radius: 3px;
+    width: 0;
+  }
+  .loc-custom button {
+    width: 100%;
+    background: rgba(95,212,212,0.1);
+    border: 1px solid var(--cyan-dim);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  /* ===== TRACK-LOCK SEARCH ===== */
+  .track-picker { position: relative; }
+  .track-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 4px 8px;
+  }
+  .track-input-wrap input {
+    background: transparent;
+    border: none;
+    color: var(--amber);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    width: 88px;
+    outline: none;
+    letter-spacing: 0.04em;
+  }
+  .track-input-wrap input::placeholder { color: var(--slate); }
+  .track-input-wrap.locked { border-color: var(--cyan); background: rgba(95,212,212,0.08); }
+  .track-clear {
+    background: none; border: none; color: var(--slate); cursor: pointer;
+    font-family: var(--mono); font-size: 12px; padding: 0 2px; display: none;
+  }
+  .track-input-wrap.locked .track-clear { display: block; color: var(--cyan); }
+
+  /* ===== MAIN SPLIT ===== */
+  main {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  /* ===== RADAR / MAP ===== */
+  #radar-wrap {
+    flex: 0 0 42%;
+    position: relative;
+    border-right: 1px solid var(--line);
+    background:
+      radial-gradient(circle at center, rgba(95,212,212,0.05) 0%, rgba(95,212,212,0) 70%),
+      var(--bg-panel);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  #radar-svg-wrap { flex: 1; min-height: 0; position: relative; }
+  #radar-svg { width: 100%; height: 100%; display: block; }
+  .ring { fill: none; stroke: var(--cyan-dim); stroke-width: 1; }
+  .crosshair { stroke: var(--cyan-dim); stroke-width: 1; }
+  @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .sweep-group { transform-origin: center; }
+  .plane-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    fill: var(--slate-bright);
+    letter-spacing: 0.03em;
+  }
+  .plane-label.locked { fill: var(--cyan); font-weight: 600; }
+  .radius-label {
+    position: absolute;
+    bottom: 10px; left: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--slate);
+    letter-spacing: 0.1em;
+  }
+  .center-mark { fill: var(--amber); }
+
+  #nearest-blob {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(11,15,20,0.88);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    max-width: 168px;
+    backdrop-filter: blur(2px);
+    display: none;
+  }
+  #nearest-blob.show { display: block; }
+  #nearest-blob .nb-label {
+    font-size: 8px;
+    color: var(--cyan);
+    letter-spacing: 0.12em;
+    margin-bottom: 5px;
+  }
+  #nearest-blob .nb-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 4px;
+  }
+  #nearest-blob .nb-logo {
+    height: 18px;
+    max-width: 48px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  #nearest-blob .nb-callsign {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.02em;
+  }
+  #nearest-blob .nb-sub { font-size: 10px; color: var(--slate-bright); margin-bottom: 2px; line-height: 1.5; }
+  #nearest-blob .nb-row { display: flex; justify-content: space-between; font-size: 10px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
+  #nearest-blob .nb-row .v { color: var(--cyan); }
+  #nearest-blob .nb-vrate { font-size: 9px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  #nearest-blob .nb-vrate.climb { color: var(--climb); }
+  #nearest-blob .nb-vrate.descend { color: var(--descend); }
+  #nearest-blob .nb-vrate.level { color: var(--slate); }
+  #nearest-blob .nb-track-btn {
+    margin-top: 8px;
+    width: 100%;
+    background: rgba(95,212,212,0.08);
+    border: 1px solid var(--cyan-dim);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    padding: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  /* ===== BOARD (split-flap list) ===== */
+  #board-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .board-head {
+    display: grid;
+    grid-template-columns: 1fr 0.85fr 1.3fr 0.75fr 0.65fr 0.75fr 0.6fr;
+    padding: 9px 18px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--slate);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  #board {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 0.85fr 1.3fr 0.75fr 0.65fr 0.75fr 0.6fr;
+    align-items: center;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    animation: flapIn 0.4s ease-out;
+    cursor: pointer;
+  }
+  .row:active { background: var(--bg-raised); }
+  .row.locked { background: rgba(95,212,212,0.06); border-left: 2px solid var(--cyan); }
+  .row.nearest { background: rgba(242,200,121,0.05); }
+  .row.selected-row { box-shadow: inset 0 0 0 1px var(--cyan-dim); }
+  @keyframes flapIn {
+    from { opacity: 0; transform: translateY(-6px) scaleY(0.85); }
+    to { opacity: 1; transform: translateY(0) scaleY(1); }
+  }
+  .row .callsign-cell { display: flex; align-items: center; gap: 7px; }
+  .row .airline-logo { height: 16px; max-width: 34px; object-fit: contain; flex-shrink: 0; }
+  .row .callsign-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .row .callsign { font-size: 16px; font-weight: 600; color: var(--amber); letter-spacing: 0.04em; }
+  .row.locked .callsign { color: var(--cyan); }
+  .row .operator { font-size: 9px; color: var(--slate); letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .reg { font-size: 10.5px; color: var(--slate); }
+  .row .actype {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .row .actype-icon {
+    flex-shrink: 0;
+  }
+  .row .actype-text {
+    font-size: 11.5px;
+    color: var(--slate-bright);
+    line-height: 1.25;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row .actype-text .typecode {
+    color: var(--slate);
+    font-size: 9px;
+    display: block;
+  }
+  .row .alt { font-size: 12px; color: var(--cyan); }
+  .row .spd { font-size: 12px; color: var(--cyan); }
+  .row .hdg { font-size: 12px; color: var(--slate-bright); display: flex; align-items: center; gap: 5px; }
+  .hdg-arrow { display: inline-block; font-size: 11px; }
+  .vrate-cell { font-size: 10.5px; font-family: var(--mono); white-space: nowrap; }
+  .vrate-cell.climb { color: var(--climb); }
+  .vrate-cell.descend { color: var(--descend); }
+  .vrate-cell.level { color: var(--slate); }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--slate);
+    font-family: var(--mono);
+    font-size: 13px;
+    gap: 10px;
+    text-align: center;
+    padding: 0 30px;
+  }
+  .empty-state .big { font-size: 15px; color: var(--slate-bright); }
+
+  #board::-webkit-scrollbar { width: 4px; }
+  #board::-webkit-scrollbar-thumb { background: var(--line); }
+
+  footer {
+    padding: 7px 18px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--slate);
+    letter-spacing: 0.06em;
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* ===== iPad / tablet tuning ===== */
+  @media (max-width: 1024px) {
+    .brand { font-size: 13px; }
+    header { padding: 10px 14px 8px; }
+    .board-head, .row { padding-left: 14px; padding-right: 14px; }
+  }
+  @media (max-width: 850px) {
+    main { flex-direction: column; }
+    #radar-wrap { flex: 0 0 38%; border-right: none; border-bottom: 1px solid var(--line); }
+    .board-head, .row { grid-template-columns: 1fr 1fr 1.1fr 0.8fr 0.8fr; }
+    .board-head div:nth-child(2), .row .reg { display: none; }
+  }
+  @media (max-width: 600px) {
+    .board-head, .row { grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr; }
+    .board-head div:nth-child(3), .row .actype { display: none; }
+  }
+</style>
+</head>
+<body>
+<svg style="display: none;">
+  <defs>
+    <!-- Standard Commercial Jet -->
+    <path id="plane_jet" d="M 0 -10 C 0.8 -10 1.2 -7 1.2 -3 L 10 3 C 10.5 3.3 10.5 3.8 9.5 3.8 L 1.2 1.5 L 1.2 7 L 3.5 8.5 C 4 8.8 4 9.2 3 9.2 L 0 8.5 L -3 9.2 C -4 9.2 -4 8.8 -3.5 8.5 L -1.2 7 L -1.2 1.5 L -9.5 3.8 C -10.5 3.8 -10.5 3.3 -10 3 L -1.2 -3 C -1.2 -7 -0.8 -10 0 -10 Z" />
+    
+    <!-- Widebody / Heavy Jet -->
+    <path id="plane_widebody" d="M 0 -11 C 1.2 -11 1.8 -8 1.8 -4 L 12.5 3 C 13.2 3.3 13.2 3.9 12 3.9 L 1.8 1.8 L 1.8 7.5 L 4.5 9.2 C 5.1 9.5 5 9.8 3.8 9.8 L 0 9 L -3.8 9.8 C -5 9.8 -5.1 9.5 -4.5 9.2 L -1.8 7.5 L -1.8 1.8 L -12 3.9 C -13.2 3.9 -13.2 3.3 -12.5 3 L -1.8 -4 C -1.8 -8 -1.2 -11 0 -11 Z" />
+    
+    <!-- Turboprop -->
+    <path id="plane_turboprop" d="M 0 -10 C 0.6 -10 0.7 -6 0.7 -1 L 10 -1 L 10 0.5 L 0.7 0.5 L 0.7 7.5 L 3 8.7 L 2.5 9.2 L 0 8.7 L -2.5 9.2 L -3 8.7 L -0.7 7.5 L -0.7 0.5 L -10 0.5 L -10 -1 L -0.7 -1 C -0.7 -6 -0.6 -10 0 -10 Z" />
+    
+    <!-- Light General Aviation -->
+    <path id="plane_light" d="M 0 -7.5 L 0.8 -6 L 0.8 -4 L 8 -4 L 8 -2.8 L 0.8 -2.8 L 0.8 3.5 L 2.5 4.5 L 2 5 L 0 4.3 L -2 5 L -2.5 4.5 L -0.8 3.5 L -0.8 -2.8 L -8 -2.8 L -8 -4 L -0.8 -4 L -0.8 -6 Z" />
+    
+    <!-- Helicopter -->
+    <path id="plane_helicopter" d="M 0 -6 C 1.2 -6 1.8 -4 1.8 1 C 1.8 3 0.8 5 0.5 8 L -0.5 8 C -0.8 5 -1.8 3 -1.8 1 C -1.8 -4 -1.2 -6 0 -6 M 0 -8 L 0 6 M -7 -1 L 7 -1 M -1.5 7 L 1.5 7 M 1 7 L 1 5.5" />
+    
+    <!-- Fighter Jet -->
+    <path id="plane_fighter" d="M 0 -9 L 1.2 -4 L 7 4 L 7 5.5 L 1.5 4.5 L 1.5 8 L 3.5 9 L 3.5 9.5 L 0 9 L -3.5 9.5 L -3.5 9 L -1.5 8 L -1.5 4.5 L -7 5.5 L -7 4 L -1.2 -4 Z" />
+    
+    <!-- Default (Fallback to standard jet) -->
+    <use id="plane_default" href="#plane_jet" />
+  </defs>
+</svg>
+<div id="app">
+  <header>
+    <div class="brand">FLIGHT<span>RAYdar</span></div>
+    <div class="header-controls">
+      <div class="track-picker">
+        <div class="track-input-wrap" id="trackInputWrap">
+          <input type="text" id="trackInput" placeholder="Track callsign / ID" autocapitalize="characters" autocomplete="off">
+          <button class="track-clear" id="trackClear">✕</button>
+        </div>
+      </div>
+      <div class="pill-group" id="altFilterGroup">
+        <button class="pill-btn active" id="altFilterBtn">HIDE GROUND</button>
+      </div>
+      <div class="pill-group" id="unitGroup">
+        <span class="glabel">UNITS</span>
+      </div>
+      <div class="loc-picker">
+        <button class="loc-btn" id="locBtn">
+          <span class="pin">⊙</span><span class="name" id="locBtnLabel">Sydney Airport</span>
+        </button>
+        <div class="loc-panel" id="locPanel">
+          <div class="loc-custom">
+            <div class="lbl">CUSTOM COORDINATES</div>
+            <div class="row2">
+              <input type="text" id="customLat" placeholder="Lat e.g. -33.9399" inputmode="decimal">
+              <input type="text" id="customLon" placeholder="Lon e.g. 151.1753" inputmode="decimal">
+            </div>
+            <button id="customApply">USE THESE COORDINATES</button>
+          </div>
+        </div>
+      </div>
+      <div class="pill-group" id="radiusPicker">
+        <span class="glabel">RANGE</span>
+      </div>
+      <div class="status-line">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">CONNECTING</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="radar-wrap">
+      <div id="radar-svg-wrap">
+        <svg id="radar-svg" viewBox="0 0 400 400"></svg>
+        <div class="radius-label" id="radiusLabel">RADIUS — KM</div>
+        <div id="nearest-blob">
+          <div class="nb-label" id="nbLabel">NEAREST AIRCRAFT</div>
+          <div class="nb-header">
+            <img class="nb-logo" id="nbLogo" alt="" style="display:none;">
+            <div class="nb-callsign" id="nbCallsign">—</div>
+          </div>
+          <div class="nb-sub" id="nbOperator">—</div>
+          <div class="nb-sub" id="nbType">—</div>
+          <div class="nb-row"><span>DIST</span><span class="v" id="nbDist">—</span></div>
+          <div class="nb-row"><span>ALT</span><span class="v" id="nbAlt">—</span></div>
+          <div class="nb-row"><span>SPD</span><span class="v" id="nbSpd">—</span></div>
+          <div class="nb-vrate" id="nbVrate">—</div>
+          <button class="nb-track-btn" id="nbTrackBtn">TRACK THIS FLIGHT</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="board-wrap">
+      <div class="board-head">
+        <div>CALLSIGN</div>
+        <div>REG</div>
+        <div>AIRCRAFT</div>
+        <div id="altHeadLabel">ALT FT</div>
+        <div id="spdHeadLabel">SPD KT</div>
+        <div>HDG</div>
+        <div>V/S</div>
+      </div>
+      <div id="board">
+        <div class="empty-state">
+          <div class="big">SCANNING AIRSPACE</div>
+          <div>Waiting for first response from airplanes.live&hellip;</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span id="lastUpdate">LAST UPDATE — —:—:—</span>
+    <span id="countCount">0 AIRCRAFT TRACKED</span>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Flight RAYdar — config
+   ============================================================ */
+const CONFIG = {
+  CENTER_LAT: -33.9399,     // default: Sydney Airport (YSSY)
+  CENTER_LON: 151.1753,
+  LOCATION_NAME: "Sydney Airport",
+  RADIUS_KM: 40,
+  RADIUS_OPTIONS: [20, 40, 80, 150, 300, 450],
+  SWEEP_SECONDS: 8,         // radar sweep duration — refresh rate is locked to this
+  MAX_ROWS: 14,
+  HIDE_GROUND: true,        // filter out altitude-0 / on-ground traffic
+  UNITS: "metric"           // "metric" (km, m) or "imperial" (mi, ft) — speed/distance toggle
+};
+
+// Quick-pick presets shown in the location dropdown — just the two requested.
+const LOCATION_PRESETS = [
+  { code: "A", name: "Newington",       lat: -33.8365730, lon: 151.0555295 },
+  { code: "B", name: "Sydney Airport",  lat: -33.9399,    lon: 151.1753 }
+];
+
+// Restore saved preferences from a previous session
+(function restoreSaved() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("flightwall_location"));
+    if (saved && typeof saved.lat === "number" && typeof saved.lon === "number") {
+      CONFIG.CENTER_LAT = saved.lat;
+      CONFIG.CENTER_LON = saved.lon;
+      CONFIG.LOCATION_NAME = saved.name || "Custom location";
+    }
+  } catch (e) { /* none saved yet */ }
+  try {
+    const savedUnits = localStorage.getItem("flightwall_units");
+    if (savedUnits === "metric" || savedUnits === "imperial") CONFIG.UNITS = savedUnits;
+  } catch (e) { /* none saved yet */ }
+  try {
+    const savedHideGround = localStorage.getItem("flightwall_hide_ground");
+    if (savedHideGround !== null) CONFIG.HIDE_GROUND = savedHideGround === "true";
+  } catch (e) { /* none saved yet */ }
+})();
+
+/* ============================================================
+   Geometry helpers
+   ============================================================ */
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function bearingFromCenter(lat1, lon1, lat2, lon2) {
+  const y = Math.sin((lon2-lon1)*Math.PI/180) * Math.cos(lat2*Math.PI/180);
+  const x = Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180) -
+            Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos((lon2-lon1)*Math.PI/180);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
+/* ============================================================
+   Flight data fetch — airplanes.live free public API
+   No auth, no API key, no proxy needed. Rate limited to 1 req/sec
+   on their end; we poll far slower than that (tied to radar sweep).
+   Docs: https://airplanes.live/api-guide/
+   ============================================================ */
+const AIRPLANES_LIVE_BASE = "https://api.airplanes.live/v2";
+
+let consecutiveFailures = 0;
+let lastGoodData = null;
+
+async function fetchFlights() {
+  const radiusNm = Math.min(CONFIG.RADIUS_KM / 1.852, 250);
+  const url = `${AIRPLANES_LIVE_BASE}/point/${CONFIG.CENTER_LAT}/${CONFIG.CENTER_LON}/${radiusNm.toFixed(1)}`;
+
+  try {
+    const res = await fetch(url);
+
+    if (res.status === 429) {
+      consecutiveFailures++;
+      setStatus("warn", "RATE LIMITED");
+      return lastGoodData;
+    }
+    if (!res.ok) {
+      consecutiveFailures++;
+      setStatus("warn", `OFFLINE (HTTP ${res.status})`);
+      return lastGoodData;
+    }
+
+    const data = await res.json();
+    if (!data || !Array.isArray(data.ac)) {
+      consecutiveFailures++;
+      setStatus("warn", "OFFLINE (bad payload)");
+      return lastGoodData;
+    }
+
+    consecutiveFailures = 0;
+    lastGoodData = data;
+    setStatus("ok", "LIVE");
+    return data;
+
+  } catch (e) {
+    consecutiveFailures++;
+    setStatus("warn", "OFFLINE (network error)");
+    console.warn("FlightWall: fetch threw an error:", e);
+    return lastGoodData;
+  }
+}
+
+function setStatus(kind, text) {
+  const dot = document.getElementById("statusDot");
+  const label = document.getElementById("statusText");
+  label.textContent = text;
+  dot.classList.toggle("warn", kind === "warn");
+}
+
+/* ============================================================
+   Parse airplanes.live aircraft objects into flight objects.
+   Named fields: hex, flight (callsign), r (registration), t (type
+   code), desc (full type description), ownOp (operator/airline),
+   lat, lon, alt_baro, gs (kt), track (deg), baro_rate (ft/min).
+   ============================================================ */
+function parseStates(raw) {
+  if (!raw || !raw.ac) return [];
+  return raw.ac
+    .filter(a => a.lat != null && a.lon != null)
+    .map(a => {
+      const lat = a.lat, lon = a.lon;
+      const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
+      const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
+      const onGround = a.alt_baro === "ground";
+      const altFt = (typeof a.alt_baro === "number") ? Math.round(a.alt_baro) : (onGround ? 0 : null);
+      const callsign = (a.flight || "").trim() || "—";
+      // airline ICAO code is conventionally the first 3 letters of the
+      // callsign when it's a flight-number callsign (e.g. QFA12 -> QFA).
+      // Private/GA registrations (e.g. VH-ABC) won't match this pattern,
+      // which is fine — they simply won't have a logo to look up.
+      // We strip spaces to be robust against padded inputs.
+      const cleanCallsign = callsign.replace(/\s+/g, "");
+      const airlineIcaoMatch = cleanCallsign.match(/^([A-Z]{3})\d/);
+      return {
+        icao24: (a.hex || "—").toUpperCase(),
+        callsign,
+        airlineIcao: airlineIcaoMatch ? airlineIcaoMatch[1] : null,
+        reg: a.r || null,
+        typeCode: a.t || null,
+        typeDesc: a.desc || null,
+        operator: a.ownOp || null,
+        mil: !!a.mil,
+        lon, lat,
+        altFt,
+        onGround,
+        spdKt: a.gs != null ? Math.round(a.gs) : null,
+        track: a.track != null ? Math.round(a.track) : null,
+        vrate: a.baro_rate != null ? Math.round(a.baro_rate) : null,
+        distKm,
+        brg
+      };
+    })
+    .filter(f => f.distKm <= CONFIG.RADIUS_KM)
+    .filter(f => !CONFIG.HIDE_GROUND || !f.onGround)
+    .sort((a, b) => a.distKm - b.distKm);
+}
+
+function headingArrow(track) {
+  if (track == null) return "—";
+  const arrows = ["↑","↗","→","↘","↓","↙","←","↖"];
+  return arrows[Math.round(track / 45) % 8];
+}
+
+// Returns rich climb/descend info: icon, css class, short label (for
+// tight spaces like board rows) and a full label with explicit rate.
+function vrateInfo(vrate) {
+  if (vrate == null) return { icon: "•", cls: "level", label: "—", full: "Level — no data" };
+  if (vrate > 150) {
+    return { icon: "▲", cls: "climb", label: `▲ ${Math.abs(vrate).toLocaleString()}`, full: `Climbing at ${Math.abs(vrate).toLocaleString()} ft/min` };
+  }
+  if (vrate < -150) {
+    return { icon: "▼", cls: "descend", label: `▼ ${Math.abs(vrate).toLocaleString()}`, full: `Descending at ${Math.abs(vrate).toLocaleString()} ft/min` };
+  }
+  return { icon: "•", cls: "level", label: "Level", full: "Level flight" };
+}
+
+/* ============================================================
+   Get Aircraft Category — Classifies aircraft type based on ICAO
+   description, model type codes, and military status.
+   ============================================================ */
+function getAircraftCategory(f) {
+  const desc = f.typeDesc ? f.typeDesc.toUpperCase() : "";
+  const code = f.typeCode ? f.typeCode.toUpperCase() : "";
+  
+  // 1. Helicopter: ICAO category starting with H (e.g. H2T, H1P, H1T)
+  if (desc.startsWith("H")) {
+    return "helicopter";
+  }
+  
+  // 2. Fighter jet: military flag is true + jet engine, OR common fighter code patterns
+  const isFighterCode = /^(F14|F15|F16|F18|F22|F35|FA18|A10|TYF|JSF|MIG|SU)/.test(code);
+  if (isFighterCode || (f.mil && desc.endsWith("J"))) {
+    return "fighter";
+  }
+  
+  // 3. Widebody / Heavy Jet: L4J/L3J descriptions or common widebody aircraft codes
+  const isWidebodyCode = /^(A33|A34|A35|A38|B74|B76|B77|B78)/.test(code);
+  if (desc.startsWith("L4J") || desc.startsWith("L3J") || isWidebodyCode) {
+    return "widebody";
+  }
+  
+  // 4. Turboprop: Description ends with T (and not helicopter, e.g. L2T, L4T)
+  if (desc.endsWith("T")) {
+    return "turboprop";
+  }
+  
+  // 5. Light Piston plane: Description ends with P (e.g. L1P, L2P) or starts with L1 or L0
+  if (desc.endsWith("P") || desc.startsWith("L1") || desc.startsWith("L0")) {
+    return "light";
+  }
+  
+  // 6. Standard Jet: Description ends with J (e.g. L2J)
+  if (desc.endsWith("J")) {
+    return "jet";
+  }
+  
+  return "default";
+}
+
+/* ============================================================
+   Airline logo lookup — open, no-auth logo set maintained by the
+   Airframes.io project (community ADS-B ecosystem), keyed by the
+   airline's 3-letter ICAO code. Free, no API key, but unofficial —
+   not every airline is guaranteed to have a logo, so every <img>
+   using this MUST have an onerror fallback to hide gracefully and
+   fall back to text (operator name), never a broken-image icon.
+   ============================================================ */
+const AIRLINE_LOGO_BASE = "https://raw.githubusercontent.com/airframesio/airline-images/main/fr24_logos";
+
+function airlineLogoUrl(airlineIcao) {
+  if (!airlineIcao) return null;
+  return `${AIRLINE_LOGO_BASE}/${airlineIcao}.png`;
+}
+
+// Shared onerror handler string for logo <img> tags: hides the image
+// element if it fails to load, so layout collapses gracefully instead
+// of showing a broken-image icon.
+const LOGO_ONERROR = `this.style.display='none'; this.dataset.failed='true';`;
+
+/* ============================================================
+   Unit conversion helpers
+   ============================================================ */
+function fmtDist(km) {
+  if (CONFIG.UNITS === "imperial") return `${Math.round(km / 1.60934)} mi`;
+  return `${Math.round(km)} km`;
+}
+function fmtAlt(ft) {
+  if (ft == null) return "—";
+  if (CONFIG.UNITS === "imperial") return ft.toLocaleString() + " ft";
+  return Math.round(ft * 0.3048).toLocaleString() + " m";
+}
+function fmtSpd(kt) {
+  if (kt == null) return "—";
+  if (CONFIG.UNITS === "imperial") return Math.round(kt * 1.15078) + " mph";
+  return Math.round(kt * 1.852) + " km/h";
+}
+
+/* ============================================================
+   Track-lock — follow a specific aircraft by callsign or hex ID
+   ============================================================ */
+let trackedId = null;
+
+function setTrackedId(id) {
+  trackedId = id ? id.trim().toUpperCase() : null;
+  const wrap = document.getElementById("trackInputWrap");
+  const input = document.getElementById("trackInput");
+  wrap.classList.toggle("locked", !!trackedId);
+  input.value = trackedId || "";
+  try { localStorage.setItem("flightwall_tracked", trackedId || ""); } catch (e) {}
+}
+
+/* ============================================================
+   Altitude → color band (radar icons + visual reference)
+   ============================================================ */
+function altitudeColor(altFt) {
+  if (altFt == null) return "#5A6472";
+  if (altFt < 3000) return "#F2C879";
+  if (altFt < 15000) return "#E0A85F";
+  return "#5FD4D4";
+}
+
+/* ============================================================
+   Position history — short rolling trail per aircraft (by icao24)
+   ============================================================ */
+const TRAIL_LENGTH = 20; // ~2.5 min of history at the default 8s sweep interval — enough to trace a turn or approach
+const STALE_MS = 5 * 60 * 1000;
+const trailHistory = new Map();
+
+function updateTrailHistory(flights) {
+  const now = Date.now();
+  const seen = new Set();
+  flights.forEach(f => {
+    seen.add(f.icao24);
+    const entry = trailHistory.get(f.icao24) || { points: [], lastSeen: now };
+    entry.points.push({ distKm: f.distKm, brg: f.brg });
+    if (entry.points.length > TRAIL_LENGTH) entry.points.shift();
+    entry.lastSeen = now;
+    trailHistory.set(f.icao24, entry);
+  });
+  for (const [icao24, entry] of trailHistory) {
+    if (!seen.has(icao24) && (now - entry.lastSeen) > STALE_MS) trailHistory.delete(icao24);
+  }
+}
+
+/* ============================================================
+   Render: board (split-flap list)
+   ============================================================ */
+function renderBoard(flights) {
+  const board = document.getElementById("board");
+  if (!flights.length) {
+    board.innerHTML = `<div class="empty-state">
+      <div class="big">NO TRAFFIC IN RANGE</div>
+      <div>Watching ${fmtDist(CONFIG.RADIUS_KM)} around your location&hellip;</div>
+    </div>`;
+    return;
+  }
+  const nearestId = flights[0] ? flights[0].icao24 : null;
+  const rows = flights.slice(0, CONFIG.MAX_ROWS).map(f => {
+    const isLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
+    const isSelected = selectedId === f.icao24;
+    const isNearest = f.icao24 === nearestId;
+    const vr = vrateInfo(f.vrate);
+    const logoUrl = airlineLogoUrl(f.airlineIcao);
+    const logoHtml = logoUrl
+      ? `<img class="airline-logo" src="${logoUrl}" alt="" onerror="${LOGO_ONERROR}">`
+      : "";
+    const category = getAircraftCategory(f);
+    const altColor = altitudeColor(f.altFt);
+    const iconRotation = f.track != null ? f.track : 0;
+    const iconHtml = `<svg class="actype-icon" viewBox="-12 -12 24 24" style="width: 14px; height: 14px; fill: ${altColor}; stroke: var(--bg); stroke-width: 0.5; transform: rotate(${iconRotation}deg);"><use href="#plane_${category}"></use></svg>`;
+    
+    return `
+    <div class="row ${isLocked ? "locked" : ""} ${isNearest ? "nearest" : ""} ${isSelected ? "selected-row" : ""}" data-id="${f.icao24}" data-callsign="${f.callsign}">
+      <div class="callsign-cell">
+        ${logoHtml}
+        <div class="callsign-text">
+          <div class="callsign">${f.callsign}</div>
+          <div class="operator">${f.operator || "&mdash;"}</div>
+        </div>
+      </div>
+      <div class="reg">${f.reg || f.icao24}</div>
+      <div class="actype">
+        ${iconHtml}
+        <div class="actype-text">
+          ${f.typeDesc || f.typeCode || "Unknown type"}
+          ${f.typeCode ? `<span class="typecode">${f.typeCode}</span>` : ""}
+        </div>
+      </div>
+      <div class="alt">${fmtAlt(f.altFt)}</div>
+      <div class="spd">${fmtSpd(f.spdKt)}</div>
+      <div class="hdg"><span class="hdg-arrow">${headingArrow(f.track)}</span>${f.track != null ? f.track + "°" : "—"}</div>
+      <div class="vrate-cell ${vr.cls}" title="${vr.full}">${vr.label}</div>
+    </div>`;
+  }).join("");
+  board.innerHTML = rows;
+
+  board.querySelectorAll(".row").forEach(row => {
+    row.addEventListener("click", () => {
+      const id = row.getAttribute("data-id");
+      selectAircraft(id);
+    });
+  });
+}
+
+/* ============================================================
+   Aircraft selection — clicking a row or a radar icon opens the
+   detail panel for that specific aircraft (separate from track-lock,
+   which persistently follows an aircraft across refreshes). If
+   nothing is selected, the panel defaults to showing the nearest
+   aircraft, same as before.
+   ============================================================ */
+let selectedId = null; // icao24 of the aircraft whose details are shown
+
+function selectAircraft(icao24) {
+  selectedId = icao24;
+  if (lastGoodData) {
+    const flights = parseStates(lastGoodData);
+    renderDetailPanel(flights);
+    renderBoard(flights);
+    renderRadar(flights);
+  }
+}
+
+/* ============================================================
+   Render: detail panel — shows the selected aircraft if one is
+   chosen (via tap on radar or board row), otherwise defaults to
+   the nearest aircraft. This replaces the old "nearest-only" blob.
+   ============================================================ */
+function renderDetailPanel(flights) {
+  const blob = document.getElementById("nearest-blob");
+  if (!flights.length) { blob.classList.remove("show"); return; }
+
+  let f = selectedId ? flights.find(fl => fl.icao24 === selectedId) : null;
+  const showingSelected = !!f;
+  if (!f) f = flights[0]; // fall back to nearest if selection has left range
+
+  blob.classList.add("show");
+  document.getElementById("nbLabel").textContent = showingSelected ? "SELECTED AIRCRAFT" : "NEAREST AIRCRAFT";
+
+  const logoUrl = airlineLogoUrl(f.airlineIcao);
+  const logoEl = document.getElementById("nbLogo");
+  if (logoUrl) {
+    logoEl.src = logoUrl;
+    logoEl.style.display = "";
+    logoEl.onerror = function() { this.style.display = "none"; };
+  } else {
+    logoEl.style.display = "none";
+  }
+
+  document.getElementById("nbCallsign").textContent = f.callsign;
+  document.getElementById("nbOperator").textContent = f.operator || "Operator unknown";
+  document.getElementById("nbType").textContent = f.typeDesc || f.typeCode || "Aircraft type unknown";
+  document.getElementById("nbDist").textContent = fmtDist(f.distKm);
+  document.getElementById("nbAlt").textContent = fmtAlt(f.altFt);
+  document.getElementById("nbSpd").textContent = fmtSpd(f.spdKt);
+
+  const vr = vrateInfo(f.vrate);
+  const vrateEl = document.getElementById("nbVrate");
+  vrateEl.className = "nb-vrate " + vr.cls;
+  vrateEl.textContent = vr.full;
+
+  const trackBtn = document.getElementById("nbTrackBtn");
+  trackBtn.textContent = (trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId)) ? "STOP TRACKING" : "TRACK THIS FLIGHT";
+  trackBtn.onclick = () => {
+    const isCurrentlyLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
+    setTrackedId(isCurrentlyLocked ? null : (f.callsign !== "—" ? f.callsign : f.icao24));
+    renderDetailPanel(flights);
+  };
+}
+
+/* ============================================================
+   Airport runway outlines — overlaid on the radar so takeoffs and
+   landings are visually anchored to real runway geometry, not just
+   open airspace. Each runway is defined by its true bearing (one
+   direction; the reciprocal end is bearing+180) and real length,
+   anchored at the airport reference point (ARP). Centerlines are
+   offset slightly apart for parallel runways to roughly match
+   real-world spacing. This is a visual reference for a hobby
+   display, not a navigation chart — good enough to recognize
+   "that's the runway," not precise enough for anything operational.
+
+   Source: published ARP coordinates + runway bearings/lengths
+   (OurAirports, Sydney Airport runway documentation).
+   ============================================================ */
+const AIRPORT_RUNWAYS = {
+  // keyed by a rounded "lat,lon" so we can match against CONFIG's
+  // current center without floating point exact-match issues
+  "-33.94,151.18": {
+    name: "Sydney (YSSY)",
+    arpLat: -33.946098,
+    arpLon: 151.177002,
+    runways: [
+      // [label1, label2, trueBearingDeg, lengthMeters, parallelOffsetMeters, perpDirectionDeg]
+      { labels: ["16R", "34L"], bearing: 160, lengthM: 3962, offsetM: -180, offsetDir: 70 },
+      { labels: ["16L", "34R"], bearing: 160, lengthM: 2438, offsetM: 180,  offsetDir: 70 },
+      { labels: ["07", "25"],   bearing: 70,  lengthM: 2530, offsetM: 0,    offsetDir: 160 }
+    ]
+  }
+};
+
+/* ============================================================
+   Geography overlay lines — waterways and highways coordinates
+   ============================================================ */
+const GEOGRAPHY = {
+  waterways: [
+    // Sydney Harbour & Parramatta River
+    [
+      { lat: -33.830, lon: 151.285 },
+      { lat: -33.845, lon: 151.250 },
+      { lat: -33.855, lon: 151.225 },
+      { lat: -33.860, lon: 151.211 },
+      { lat: -33.850, lon: 151.190 },
+      { lat: -33.840, lon: 151.160 },
+      { lat: -33.838, lon: 151.120 },
+      { lat: -33.830, lon: 151.080 },
+      { lat: -33.833, lon: 151.050 },
+      { lat: -33.818, lon: 150.998 }
+    ],
+    // Georges River
+    [
+      { lat: -33.995, lon: 151.140 },
+      { lat: -33.998, lon: 151.100 },
+      { lat: -33.978, lon: 151.070 },
+      { lat: -33.988, lon: 151.030 },
+      { lat: -33.965, lon: 150.990 },
+      { lat: -33.930, lon: 150.920 }
+    ],
+    // Cooks River
+    [
+      { lat: -33.955, lon: 151.165 },
+      { lat: -33.928, lon: 151.155 },
+      { lat: -33.918, lon: 151.135 },
+      { lat: -33.895, lon: 151.075 }
+    ],
+    // Sydney Coastline
+    [
+      { lat: -33.590, lon: 151.320 },
+      { lat: -33.680, lon: 151.300 },
+      { lat: -33.800, lon: 151.290 },
+      { lat: -33.813, lon: 151.282 }
+    ],
+    [
+      { lat: -33.834, lon: 151.280 },
+      { lat: -33.890, lon: 151.275 },
+      { lat: -33.920, lon: 151.265 },
+      { lat: -33.990, lon: 151.235 }
+    ],
+    [
+      { lat: -34.020, lon: 151.230 },
+      { lat: -34.060, lon: 151.150 },
+      { lat: -34.080, lon: 151.160 }
+    ]
+  ],
+  botanyBay: [
+    { lat: -34.020, lon: 151.230 },
+    { lat: -34.016, lon: 151.168 },
+    { lat: -34.004, lon: 151.135 },
+    { lat: -33.990, lon: 151.140 },
+    { lat: -33.955, lon: 151.165 },
+    { lat: -33.958, lon: 151.185 },
+    { lat: -33.978, lon: 151.205 },
+    { lat: -33.992, lon: 151.232 }
+  ],
+  highways: [
+    // M4 Highway
+    [
+      { lat: -33.750, lon: 150.700 },
+      { lat: -33.800, lon: 150.900 },
+      { lat: -33.850, lon: 151.060 },
+      { lat: -33.880, lon: 151.200 }
+    ],
+    // M5 Highway
+    [
+      { lat: -34.050, lon: 150.750 },
+      { lat: -33.960, lon: 150.900 },
+      { lat: -33.940, lon: 151.100 },
+      { lat: -33.935, lon: 151.180 }
+    ],
+    // M1 Highway
+    [
+      { lat: -33.860, lon: 151.210 },
+      { lat: -33.920, lon: 151.220 },
+      { lat: -33.950, lon: 151.185 },
+      { lat: -34.000, lon: 151.130 },
+      { lat: -34.060, lon: 151.100 }
+    ]
+  ]
+};
+
+function getActiveAirport() {
+  // match if current center is within ~0.02deg (~2km) of a known ARP
+  for (const key in AIRPORT_RUNWAYS) {
+    const ap = AIRPORT_RUNWAYS[key];
+    if (Math.abs(ap.arpLat - CONFIG.CENTER_LAT) < 0.05 && Math.abs(ap.arpLon - CONFIG.CENTER_LON) < 0.05) {
+      return ap;
+    }
+  }
+  return null;
+}
+
+// Offset a lat/lon by a distance (meters) along a true bearing (degrees).
+// Standard geodesic destination-point formula, accurate at this scale.
+function offsetLatLon(lat, lon, distM, bearingDeg) {
+  const R = 6371000;
+  const brg = bearingDeg * Math.PI / 180;
+  const lat1 = lat * Math.PI / 180;
+  const lon1 = lon * Math.PI / 180;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distM / R) + Math.cos(lat1) * Math.sin(distM / R) * Math.cos(brg));
+  const lon2 = lon1 + Math.atan2(
+    Math.sin(brg) * Math.sin(distM / R) * Math.cos(lat1),
+    Math.cos(distM / R) - Math.sin(lat1) * Math.sin(lat2)
+  );
+  return { lat: lat2 * 180 / Math.PI, lon: lon2 * 180 / Math.PI };
+}
+
+// Compute the two threshold points of a runway, in {distKm, brg}-from-
+// center form so they can go through the same `project()` used for planes.
+function getRunwayEndpoints(airport, runway) {
+  // centerline midpoint = ARP, shifted perpendicular by the parallel offset
+  let midLat = airport.arpLat, midLon = airport.arpLon;
+  if (runway.offsetM !== 0) {
+    const shifted = offsetLatLon(midLat, midLon, Math.abs(runway.offsetM), runway.offsetM > 0 ? runway.offsetDir : (runway.offsetDir + 180) % 360);
+    midLat = shifted.lat; midLon = shifted.lon;
+  }
+  const halfLen = runway.lengthM / 2;
+  const end1 = offsetLatLon(midLat, midLon, halfLen, runway.bearing);
+  const end2 = offsetLatLon(midLat, midLon, halfLen, (runway.bearing + 180) % 360);
+  return [
+    { ...end1, label: runway.labels[0], distKm: haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, end1.lat, end1.lon), brg: bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, end1.lat, end1.lon) },
+    { ...end2, label: runway.labels[1], distKm: haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, end2.lat, end2.lon), brg: bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, end2.lat, end2.lon) }
+  ];
+}
+
+/* ============================================================
+   Render: radar SVG — plane icons rotated to heading, fading
+   trails, altitude-banded color, locked-aircraft highlight,
+   runway outline overlay when centered near a known airport
+   ============================================================ */
+function renderRadar(flights) {
+  updateTrailHistory(flights);
+
+  const svg = document.getElementById("radar-svg");
+  const cx = 200, cy = 200, maxR = 175;
+  let html = "";
+
+  [1, 2, 3, 4].forEach(i => {
+    const r = (maxR / 4) * i;
+    html += `<circle class="ring" cx="${cx}" cy="${cy}" r="${r}" />`;
+  });
+  html += `<line class="crosshair" x1="${cx}" y1="${cy-maxR}" x2="${cx}" y2="${cy+maxR}" />`;
+  html += `<line class="crosshair" x1="${cx-maxR}" y1="${cy}" x2="${cx+maxR}" y2="${cy}" />`;
+
+  html += `<g class="sweep-group" id="sweepGroup">
+    <path d="M ${cx} ${cy} L ${cx} ${cy-maxR} A ${maxR} ${maxR} 0 0 1 ${cx+maxR*Math.sin(0.5)} ${cy-maxR*Math.cos(0.5)} Z"
+      fill="url(#sweepGrad)" opacity="0.5" />
+  </g>`;
+
+  html += `<defs>
+    <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5FD4D4" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#5FD4D4" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="radarClip">
+      <circle cx="${cx}" cy="${cy}" r="${maxR}" />
+    </clipPath>
+  </defs>`;
+
+  function project(distKm, brg) {
+    const r = (distKm / CONFIG.RADIUS_KM) * maxR;
+    const rad = (brg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  function projectPath(coords) {
+    return coords.map(c => {
+      const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, c.lat, c.lon);
+      const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, c.lat, c.lon);
+      return project(distKm, brg);
+    });
+  }
+
+  // Calculate dynamic stroke widths based on current zoom range
+  const zoomFactor = 40 / CONFIG.RADIUS_KM;
+  const riverWidth = Math.max(0.6, 2.5 * zoomFactor);
+  const highwayWidth = Math.max(0.4, 1.2 * zoomFactor);
+
+  // Draw geography outlines grouped under the radar clip path
+  html += `<g clip-path="url(#radarClip)">`;
+
+  // 1. Draw Botany Bay polygon
+  const botanyBayPoints = projectPath(GEOGRAPHY.botanyBay);
+  if (botanyBayPoints.length > 0) {
+    const pointsStr = botanyBayPoints.map(p => `${p.x},${p.y}`).join(" ");
+    html += `<polygon points="${pointsStr}" fill="var(--cyan-dim)" opacity="0.08" stroke="var(--cyan-dim)" stroke-width="${riverWidth}" stroke-linejoin="round" />`;
+  }
+
+  // 2. Draw Waterway lines
+  GEOGRAPHY.waterways.forEach(path => {
+    const projected = projectPath(path);
+    if (projected.length > 1) {
+      const pointsStr = projected.map(p => `${p.x},${p.y}`).join(" ");
+      html += `<polyline points="${pointsStr}" fill="none" stroke="var(--cyan-dim)" stroke-width="${riverWidth}" opacity="0.22" stroke-linecap="round" stroke-linejoin="round" />`;
+    }
+  });
+
+  // 3. Draw Highway lines
+  GEOGRAPHY.highways.forEach(path => {
+    const projected = projectPath(path);
+    if (projected.length > 1) {
+      const pointsStr = projected.map(p => `${p.x},${p.y}`).join(" ");
+      html += `<polyline points="${pointsStr}" fill="none" stroke="var(--slate)" stroke-width="${highwayWidth}" opacity="0.25" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" />`;
+    }
+  });
+
+  // 4. Draw Sydney Airport runways unconditionally (clipped)
+  const sydneyAirport = AIRPORT_RUNWAYS["-33.94,151.18"];
+  if (sydneyAirport) {
+    sydneyAirport.runways.forEach(rw => {
+      const [end1, end2] = getRunwayEndpoints(sydneyAirport, rw);
+      const p1 = project(end1.distKm, end1.brg);
+      const p2 = project(end2.distKm, end2.brg);
+      html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#8C97A6" stroke-width="3" stroke-linecap="round" opacity="0.55" />`;
+      html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#F2C879" stroke-width="0.6" stroke-dasharray="4 4" opacity="0.5" />`;
+    });
+  }
+
+  html += `</g>`;
+
+  html += `<circle class="center-mark" cx="${cx}" cy="${cy}" r="4" />`;
+
+  flights.forEach(f => {
+    const hist = trailHistory.get(f.icao24);
+    if (!hist || hist.points.length < 2) return;
+    const pts = hist.points.map(p => project(p.distKm, p.brg));
+    const color = altitudeColor(f.altFt);
+    pts.forEach((pt, i) => {
+      if (i === 0) return;
+      const prev = pts[i - 1];
+      const opacity = 0.06 + (i / pts.length) * 0.28;
+      html += `<line x1="${prev.x}" y1="${prev.y}" x2="${pt.x}" y2="${pt.y}" stroke="${color}" stroke-width="1.4" opacity="${opacity.toFixed(2)}" stroke-linecap="round" />`;
+    });
+  });
+
+  flights.forEach(f => {
+    const { x, y } = project(f.distKm, f.brg);
+    const rot = f.track != null ? f.track : 0;
+    const color = altitudeColor(f.altFt);
+    const isLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
+    const isSelected = selectedId === f.icao24;
+    const strokeColor = isLocked ? "#5FD4D4" : "#0B0F14";
+    const strokeWidth = isLocked ? 1.4 : 0.6;
+    const category = getAircraftCategory(f);
+    const shapeId = `#plane_${category}`;
+
+    if (isLocked) {
+      html += `<circle cx="${x}" cy="${y}" r="11" fill="none" stroke="#5FD4D4" stroke-width="1" opacity="0.6"><animate attributeName="r" values="9;14;9" dur="1.8s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.7;0.1;0.7" dur="1.8s" repeatCount="indefinite" /></circle>`;
+    }
+    if (isSelected && !isLocked) {
+      html += `<circle cx="${x}" cy="${y}" r="9" fill="none" stroke="#F2C879" stroke-width="1" opacity="0.7" />`;
+    }
+
+    // invisible larger hit-target so tapping is easy on iPad, even though the icon itself is small
+    html += `<circle class="plane-hit" cx="${x}" cy="${y}" r="14" fill="transparent" data-id="${f.icao24}" style="cursor:pointer;" />`;
+    html += `<use href="${shapeId}" x="${x}" y="${y}" fill="${color}"
+      transform="rotate(${rot} ${x} ${y})" stroke="${strokeColor}" stroke-width="${strokeWidth}" style="pointer-events:none;" />`;
+    
+    // Draw airline logo stacked above the callsign label on the radar if available
+    const logoUrl = airlineLogoUrl(f.airlineIcao);
+    if (logoUrl) {
+      html += `<image href="${logoUrl}" x="${x + 8}" y="${y - 10}" width="16" height="10" preserveAspectRatio="xMidYMid meet" onerror="this.style.display='none';" style="pointer-events:none;" />`;
+      html += `<text class="plane-label ${isLocked ? "locked" : ""}" x="${x + 8}" y="${y + 8}" style="pointer-events:none;">${f.callsign}</text>`;
+    } else {
+      html += `<text class="plane-label ${isLocked ? "locked" : ""}" x="${x + 8}" y="${y + 3}" style="pointer-events:none;">${f.callsign}</text>`;
+    }
+  });
+
+  svg.innerHTML = html;
+  document.getElementById("radiusLabel").textContent = `RADIUS — ${fmtDist(CONFIG.RADIUS_KM)}`;
+
+  // wire up click-to-select on every plane hit-target now that the SVG is in the DOM
+  svg.querySelectorAll(".plane-hit").forEach(el => {
+    el.addEventListener("click", () => selectAircraft(el.getAttribute("data-id")));
+  });
+
+  const sweepEl = document.getElementById("sweepGroup");
+  sweepEl.style.animation = "none";
+  void sweepEl.offsetWidth; // force reflow so the animation restarts cleanly
+  sweepEl.style.animation = `sweep ${CONFIG.SWEEP_SECONDS}s linear infinite`;
+}
+
+/* ============================================================
+   Location picker — presets + custom lat/lon, persisted locally
+   ============================================================ */
+function saveLocation(lat, lon, name) {
+  try { localStorage.setItem("flightwall_location", JSON.stringify({ lat, lon, name })); } catch (e) {}
+}
+
+function setLocation(lat, lon, name) {
+  CONFIG.CENTER_LAT = lat;
+  CONFIG.CENTER_LON = lon;
+  CONFIG.LOCATION_NAME = name;
+  saveLocation(lat, lon, name);
+  document.getElementById("locBtnLabel").textContent = name;
+  renderLocationPanel();
+  closeLocationPanel();
+  if (activeTimer) clearTimeout(activeTimer);
+  forceRefresh = true;
+  tick();
+}
+
+function renderLocationPanel() {
+  const panel = document.getElementById("locPanel");
+  panel.querySelectorAll(".preset").forEach(b => b.remove());
+  const customBlock = panel.querySelector(".loc-custom");
+  LOCATION_PRESETS.forEach(p => {
+    const btn = document.createElement("button");
+    const isActive = Math.abs(p.lat - CONFIG.CENTER_LAT) < 0.0005 && Math.abs(p.lon - CONFIG.CENTER_LON) < 0.0005;
+    btn.className = "preset" + (isActive ? " active" : "");
+    btn.innerHTML = `<span><span class="code">${p.code}</span>${p.name}</span>`;
+    btn.addEventListener("click", () => setLocation(p.lat, p.lon, p.name));
+    panel.insertBefore(btn, customBlock);
+  });
+}
+
+function openLocationPanel() { document.getElementById("locPanel").classList.add("open"); }
+function closeLocationPanel() { document.getElementById("locPanel").classList.remove("open"); }
+function toggleLocationPanel(e) {
+  e.stopPropagation();
+  document.getElementById("locPanel").classList.toggle("open");
+}
+
+function initLocationPicker() {
+  document.getElementById("locBtnLabel").textContent = CONFIG.LOCATION_NAME;
+  document.getElementById("locBtn").addEventListener("click", toggleLocationPanel);
+  document.getElementById("locPanel").addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("click", closeLocationPanel);
+
+  document.getElementById("customApply").addEventListener("click", () => {
+    const latVal = parseFloat(document.getElementById("customLat").value);
+    const lonVal = parseFloat(document.getElementById("customLon").value);
+    if (isNaN(latVal) || isNaN(lonVal) || latVal < -90 || latVal > 90 || lonVal < -180 || lonVal > 180) {
+      document.getElementById("customLat").style.borderColor = "var(--warn)";
+      document.getElementById("customLon").style.borderColor = "var(--warn)";
+      return;
+    }
+    setLocation(latVal, lonVal, `${latVal.toFixed(3)}, ${lonVal.toFixed(3)}`);
+    document.getElementById("customLat").value = "";
+    document.getElementById("customLon").value = "";
+  });
+
+  renderLocationPanel();
+}
+
+/* ============================================================
+   Radius picker — tap to switch range, re-fetches immediately
+   ============================================================ */
+let activeTimer = null;
+let forceRefresh = false;
+
+function renderRadiusPicker() {
+  const wrap = document.getElementById("radiusPicker");
+  wrap.querySelectorAll(".pill-btn").forEach(b => b.remove());
+  CONFIG.RADIUS_OPTIONS.forEach(km => {
+    const btn = document.createElement("button");
+    btn.className = "pill-btn" + (km === CONFIG.RADIUS_KM ? " active" : "");
+    btn.textContent = km + (CONFIG.UNITS === "imperial" ? " MI" : " KM");
+    btn.addEventListener("click", () => {
+      if (km === CONFIG.RADIUS_KM) return;
+      CONFIG.RADIUS_KM = km;
+      renderRadiusPicker();
+      if (activeTimer) clearTimeout(activeTimer);
+      forceRefresh = true;
+      tick();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+/* ============================================================
+   Unit switcher (metric / imperial)
+   ============================================================ */
+function renderUnitPicker() {
+  const wrap = document.getElementById("unitGroup");
+  wrap.querySelectorAll(".pill-btn").forEach(b => b.remove());
+  [{ key: "metric", label: "KM" }, { key: "imperial", label: "MI" }].forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "pill-btn" + (CONFIG.UNITS === opt.key ? " active" : "");
+    btn.textContent = opt.label;
+    btn.addEventListener("click", () => {
+      if (CONFIG.UNITS === opt.key) return;
+      CONFIG.UNITS = opt.key;
+      try { localStorage.setItem("flightwall_units", opt.key); } catch (e) {}
+      renderUnitPicker();
+      renderRadiusPicker();
+      // re-render immediately with cached data so units update without waiting for next poll
+      if (lastGoodData) {
+        const flights = parseStates(lastGoodData);
+        renderBoard(flights);
+        renderRadar(flights);
+        renderDetailPanel(flights);
+      }
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+/* ============================================================
+   Altitude (ground traffic) filter toggle
+   ============================================================ */
+function initAltFilter() {
+  const btn = document.getElementById("altFilterBtn");
+  btn.classList.toggle("active", CONFIG.HIDE_GROUND);
+  btn.addEventListener("click", () => {
+    CONFIG.HIDE_GROUND = !CONFIG.HIDE_GROUND;
+    try { localStorage.setItem("flightwall_hide_ground", String(CONFIG.HIDE_GROUND)); } catch (e) {}
+    btn.classList.toggle("active", CONFIG.HIDE_GROUND);
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderBoard(flights);
+      renderRadar(flights);
+      renderDetailPanel(flights);
+    }
+  });
+}
+
+/* ============================================================
+   Track-lock input wiring
+   ============================================================ */
+function initTrackPicker() {
+  const input = document.getElementById("trackInput");
+  const clearBtn = document.getElementById("trackClear");
+
+  try {
+    const saved = localStorage.getItem("flightwall_tracked");
+    if (saved) setTrackedId(saved);
+  } catch (e) {}
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      setTrackedId(input.value);
+      input.blur();
+      if (lastGoodData) {
+        const flights = parseStates(lastGoodData);
+        renderBoard(flights);
+        renderRadar(flights);
+      }
+    }
+  });
+  clearBtn.addEventListener("click", () => {
+    setTrackedId(null);
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderBoard(flights);
+      renderRadar(flights);
+    }
+  });
+}
+
+/* ============================================================
+   file:// protocol guard
+   ============================================================ */
+function checkProtocol() {
+  if (window.location.protocol === "file:") {
+    setStatus("warn", "RUN VIA LOCAL SERVER");
+    document.getElementById("board").innerHTML = `<div class="empty-state">
+      <div class="big">OPENED AS A LOCAL FILE</div>
+      <div>Browsers block live data requests from file:// pages.<br>
+      Serve this folder instead — e.g. run <strong>python3 -m http.server 8000</strong><br>
+      in this folder, then open <strong>http://localhost:8000</strong>.<br>
+      (Hosting it on GitHub Pages also works, and is needed for the iPad.)</div>
+    </div>`;
+    return true;
+  }
+  return false;
+}
+
+function fmtTime(d) {
+  return d.toTimeString().slice(0,8);
+}
+
+/* ============================================================
+   Main loop — refresh interval is locked to the radar sweep
+   duration, so the radar always completes one clean rotation
+   per data refresh (visually synced, not just timed similarly).
+   ============================================================ */
+async function tick() {
+  if (checkProtocol()) return;
+
+  const raw = await fetchFlights();
+  const flights = parseStates(raw);
+
+  renderBoard(flights);
+  renderRadar(flights);
+  renderDetailPanel(flights);
+
+  document.getElementById("lastUpdate").textContent = `LAST UPDATE — ${fmtTime(new Date())}`;
+  document.getElementById("countCount").textContent = `${flights.length} AIRCRAFT TRACKED`;
+
+  let delay = CONFIG.SWEEP_SECONDS * 1000;
+  if (consecutiveFailures >= 1) delay = CONFIG.SWEEP_SECONDS * 1000 * 2;
+  if (consecutiveFailures >= 3) delay = CONFIG.SWEEP_SECONDS * 1000 * 4;
+  if (consecutiveFailures >= 6) delay = 120000;
+  if (forceRefresh) { delay = CONFIG.SWEEP_SECONDS * 1000; forceRefresh = false; }
+
+  activeTimer = setTimeout(tick, delay);
+}
+
+renderRadiusPicker();
+renderUnitPicker();
+initLocationPicker();
+initAltFilter();
+initTrackPicker();
+tick();
+
+// Prevent iOS Safari pull-to-refresh / bounce so it feels app-like
+document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+</script>
+</body>
+</html>
