@@ -286,59 +286,78 @@
   #nearest-blob {
     position: absolute;
     top: 10px; right: 10px;
-    background: rgba(11,15,20,0.88);
-    border: 1px solid var(--cyan-dim);
-    border-radius: 6px;
-    padding: 10px 12px;
+    background: rgba(17, 22, 29, 0.9);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
     font-family: var(--mono);
-    max-width: 168px;
-    backdrop-filter: blur(2px);
+    width: 290px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     display: none;
+    z-index: 50;
   }
   #nearest-blob.show { display: block; }
   #nearest-blob .nb-label {
     font-size: 8px;
     color: var(--cyan);
     letter-spacing: 0.12em;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
   }
   #nearest-blob .nb-header {
     display: flex;
     align-items: center;
-    gap: 7px;
-    margin-bottom: 4px;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
   }
   #nearest-blob .nb-logo {
-    height: 18px;
-    max-width: 48px;
+    height: 22px;
+    max-width: 60px;
     object-fit: contain;
     flex-shrink: 0;
   }
+  #nearest-blob .nb-callsign-wrap {
+    display: flex;
+    flex-direction: column;
+  }
   #nearest-blob .nb-callsign {
-    font-size: 17px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--amber);
     letter-spacing: 0.02em;
   }
-  #nearest-blob .nb-sub { font-size: 10px; color: var(--slate-bright); margin-bottom: 2px; line-height: 1.5; }
+  #nearest-blob .nb-iata {
+    font-size: 11px;
+    color: var(--slate-bright);
+    margin-top: -2px;
+  }
+  #nearest-blob .nb-sub { font-size: 10px; color: var(--slate-bright); margin-bottom: 3px; line-height: 1.4; }
   #nearest-blob .nb-row { display: flex; justify-content: space-between; font-size: 10px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
   #nearest-blob .nb-row .v { color: var(--cyan); }
-  #nearest-blob .nb-vrate { font-size: 9px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  #nearest-blob .nb-vrate { font-size: 9.5px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 6px; }
   #nearest-blob .nb-vrate.climb { color: var(--climb); }
   #nearest-blob .nb-vrate.descend { color: var(--descend); }
   #nearest-blob .nb-vrate.level { color: var(--slate); }
   #nearest-blob .nb-track-btn {
-    margin-top: 8px;
+    margin-top: 12px;
     width: 100%;
-    background: rgba(95,212,212,0.08);
+    background: rgba(95,212,212,0.06);
     border: 1px solid var(--cyan-dim);
     color: var(--cyan);
     font-family: var(--mono);
-    font-size: 9.5px;
+    font-size: 10px;
     letter-spacing: 0.06em;
-    padding: 6px;
-    border-radius: 3px;
+    padding: 7px;
+    border-radius: 4px;
     cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  #nearest-blob .nb-track-btn:hover {
+    background: rgba(95,212,212,0.12);
+    border-color: var(--cyan);
   }
 
   /* ===== BOARD (split-flap list) ===== */
@@ -452,6 +471,81 @@
     gap: 6px;
   }
 
+  /* Progress Bar & Detail Panel Grids */
+  .nb-route-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .nb-route-codes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .nb-route-names {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5px;
+    color: var(--slate);
+    margin-top: 2px;
+  }
+  .nb-route-names div {
+    max-width: 45%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .progress-bar-container {
+    margin-top: 10px;
+    font-family: var(--mono);
+  }
+  .progress-bar-track {
+    position: relative;
+    height: 4px;
+    background: var(--line);
+    border-radius: 2px;
+    margin: 8px 0;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--cyan);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .progress-plane {
+    position: absolute;
+    top: -5px;
+    transform: translate(-50%, 0) rotate(90deg);
+    font-size: 11px;
+    color: var(--cyan);
+    transition: left 0.4s ease;
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--slate);
+  }
+  .nb-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 10px;
+  }
+  .nb-grid-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .nb-grid-item .lbl { font-size: 8px; color: var(--slate); letter-spacing: 0.04em; margin-bottom: 2px; text-transform: uppercase; }
+  .nb-grid-item .val { color: var(--cyan); font-weight: 600; }
+
   /* ===== iPad / tablet tuning ===== */
   @media (max-width: 1024px) {
     .brand { font-size: 13px; }
@@ -460,9 +554,18 @@
   }
   @media (max-width: 850px) {
     main { flex-direction: column; }
-    #radar-wrap { flex: 0 0 38%; border-right: none; border-bottom: 1px solid var(--line); }
+    #radar-wrap { flex: 0 0 50% !important; border-right: none; border-bottom: 1px solid var(--line); }
     .board-head, .row { grid-template-columns: 1fr 1fr 1.1fr 0.8fr 0.8fr; }
     .board-head div:nth-child(2), .row .reg { display: none; }
+    #nearest-blob {
+      top: auto;
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      width: auto;
+      max-width: none;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    }
   }
   @media (max-width: 600px) {
     .board-head, .row { grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr; }
@@ -478,6 +581,12 @@
     
     <!-- Widebody / Heavy Jet -->
     <path id="plane_widebody" d="M 0 -11 C 1.2 -11 1.8 -8 1.8 -4 L 12.5 3 C 13.2 3.3 13.2 3.9 12 3.9 L 1.8 1.8 L 1.8 7.5 L 4.5 9.2 C 5.1 9.5 5 9.8 3.8 9.8 L 0 9 L -3.8 9.8 C -5 9.8 -5.1 9.5 -4.5 9.2 L -1.8 7.5 L -1.8 1.8 L -12 3.9 C -13.2 3.9 -13.2 3.3 -12.5 3 L -1.8 -4 C -1.8 -8 -1.2 -11 0 -11 Z" />
+    
+    <!-- Airbus A380 Superjumbo -->
+    <path id="plane_a380" d="M 0 -13 C 1.2 -13 2 -9 2 -5 L 17 3 C 17.5 3.5 17.2 4.2 15.5 4 L 2 1.5 L 2 8 L 5 10 C 5.5 10.3 5.3 10.7 4 10.7 L 0 9.8 L -4 10.7 C -5.3 10.7 -5.5 10.3 -5 10 L -2 8 L -2 1.5 L -15.5 4 C -17.2 4.2 -17.5 3.5 -17 3 L -2 -5 C -2 -9 -1.2 -13 0 -13 Z" />
+    
+    <!-- Boeing 747 Jumbo -->
+    <path id="plane_b747" d="M 0 -12 C 1.2 -12 1.8 -8 1.8 -4 L 14 3 C 14.5 3.5 14 4 12.5 3.8 L 9 2.5 L 1.8 1.2 L 1.8 7.5 L 4 9 C 4.5 9.3 4.4 9.6 3.5 9.6 L 0 9 L -3.5 9.6 C -4.4 9.6 -4.5 9.3 -4 9 L -1.8 7.5 L -1.8 1.2 L -9 2.5 L -12.5 3.8 C -14 4 -14.5 3.5 -14 3 L -1.8 -4 C -1.8 -8 -1.2 -12 0 -12 Z" />
     
     <!-- Turboprop -->
     <path id="plane_turboprop" d="M 0 -10 C 0.6 -10 0.7 -6 0.7 -1 L 10 -1 L 10 0.5 L 0.7 0.5 L 0.7 7.5 L 3 8.7 L 2.5 9.2 L 0 8.7 L -2.5 9.2 L -3 8.7 L -0.7 7.5 L -0.7 0.5 L -10 0.5 L -10 -1 L -0.7 -1 C -0.7 -6 -0.6 -10 0 -10 Z" />
@@ -504,6 +613,12 @@
           <input type="text" id="trackInput" placeholder="Track callsign / ID" autocapitalize="characters" autocomplete="off">
           <button class="track-clear" id="trackClear">✕</button>
         </div>
+      </div>
+      <div class="pill-group" id="layoutGroup">
+        <button class="pill-btn" id="layoutToggleBtn">RADAR ONLY</button>
+      </div>
+      <div class="pill-group" id="hotSpotsGroup">
+        <button class="pill-btn" id="hotSpotsBtn">HOT SPOTS</button>
       </div>
       <div class="pill-group" id="altFilterGroup">
         <button class="pill-btn active" id="altFilterBtn">HIDE GROUND</button>
@@ -544,15 +659,75 @@
         <div id="nearest-blob">
           <div class="nb-label" id="nbLabel">NEAREST AIRCRAFT</div>
           <div class="nb-header">
+            <div class="nb-callsign-wrap">
+              <div class="nb-callsign" id="nbCallsign">—</div>
+              <div class="nb-iata" id="nbIata">—</div>
+            </div>
             <img class="nb-logo" id="nbLogo" alt="" style="display:none;">
-            <div class="nb-callsign" id="nbCallsign">—</div>
           </div>
           <div class="nb-sub" id="nbOperator">—</div>
           <div class="nb-sub" id="nbType">—</div>
-          <div class="nb-row"><span>DIST</span><span class="v" id="nbDist">—</span></div>
-          <div class="nb-row"><span>ALT</span><span class="v" id="nbAlt">—</span></div>
-          <div class="nb-row"><span>SPD</span><span class="v" id="nbSpd">—</span></div>
-          <div class="nb-vrate" id="nbVrate">—</div>
+          
+          <!-- Route Section -->
+          <div class="nb-route-section" id="nbRouteSection" style="display:none;">
+            <div class="nb-route-codes">
+              <span id="nbOriginCode">---</span>
+              <span style="font-size:12px; opacity:0.6;">✈</span>
+              <span id="nbDestCode">---</span>
+            </div>
+            <div class="nb-route-names">
+              <div id="nbOriginName" title="">---</div>
+              <div id="nbDestName" title="" style="text-align:right;">---</div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="nbProgressFill"></div>
+                <div class="progress-plane" id="nbProgressPlane">✈</div>
+              </div>
+              <div class="progress-labels">
+                <span id="nbProgressPct">0%</span>
+                <span id="nbProgressFlown">—</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Flight Times & Details Grid -->
+          <div class="nb-grid" id="nbTimesGrid" style="display:none;">
+            <div class="nb-grid-item">
+              <span class="lbl">Elapsed</span>
+              <span class="val" id="nbElapsed">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Remaining</span>
+              <span class="val" id="nbRemaining">—</span>
+            </div>
+            <div class="nb-grid-item" style="grid-column: span 2;">
+              <span class="lbl">Est. Duration & ETA</span>
+              <span class="val" id="nbDurationETA">—</span>
+            </div>
+          </div>
+          
+          <div class="nb-grid">
+            <div class="nb-grid-item">
+              <span class="lbl">Distance</span>
+              <span class="val" id="nbDist">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Altitude</span>
+              <span class="val" id="nbAlt">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Speed</span>
+              <span class="val" id="nbSpd">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">V/S</span>
+              <span class="val" id="nbVrateSmall">—</span>
+            </div>
+          </div>
+          <div class="nb-vrate" id="nbVrate" style="display:none;">—</div>
           <button class="nb-track-btn" id="nbTrackBtn">TRACK THIS FLIGHT</button>
         </div>
       </div>
@@ -592,466 +767,38 @@ const CONFIG = {
   CENTER_LON: 151.1753,
   LOCATION_NAME: "Sydney Airport",
   RADIUS_KM: 40,
-  RADIUS_OPTIONS: [20, 40, 80, 150, 300, 450],
+  RADIUS_OPTIONS: [3, 10, 20, 40, 80, 150, 300, 450],
   SWEEP_SECONDS: 8,         // radar sweep duration — refresh rate is locked to this
   MAX_ROWS: 14,
   HIDE_GROUND: true,        // filter out altitude-0 / on-ground traffic
-  UNITS: "metric"           // "metric" (km, m) or "imperial" (mi, ft) — speed/distance toggle
+  UNITS: "metric",          // "metric" (km, m) or "imperial" (mi, ft) — speed/distance toggle
+  SHOW_HOTSPOTS: false,     // session-wide flight path accumulator
+  RADAR_ONLY: false         // radar-only viewport mode
 };
 
-// Quick-pick presets shown in the location dropdown — just the two requested.
+// Quick-pick presets shown in the location dropdown
 const LOCATION_PRESETS = [
   { code: "A", name: "Newington",       lat: -33.8365730, lon: 151.0555295 },
   { code: "B", name: "Sydney Airport",  lat: -33.9399,    lon: 151.1753 }
 ];
 
-// Restore saved preferences from a previous session
-(function restoreSaved() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("flightwall_location"));
-    if (saved && typeof saved.lat === "number" && typeof saved.lon === "number") {
-      CONFIG.CENTER_LAT = saved.lat;
-      CONFIG.CENTER_LON = saved.lon;
-      CONFIG.LOCATION_NAME = saved.name || "Custom location";
-    }
-  } catch (e) { /* none saved yet */ }
-  try {
-    const savedUnits = localStorage.getItem("flightwall_units");
-    if (savedUnits === "metric" || savedUnits === "imperial") CONFIG.UNITS = savedUnits;
-  } catch (e) { /* none saved yet */ }
-  try {
-    const savedHideGround = localStorage.getItem("flightwall_hide_ground");
-    if (savedHideGround !== null) CONFIG.HIDE_GROUND = savedHideGround === "true";
-  } catch (e) { /* none saved yet */ }
-})();
+// In-memory caches and trackers
+const routeCache = new Map();
+const pendingRouteFetches = new Set();
+const sessionTrails = new Map();
+const zeroSpeedTimestamps = new Map();
+const runwayActivity = {}; // active runway tracking
 
-/* ============================================================
-   Geometry helpers
-   ============================================================ */
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-function bearingFromCenter(lat1, lon1, lat2, lon2) {
-  const y = Math.sin((lon2-lon1)*Math.PI/180) * Math.cos(lat2*Math.PI/180);
-  const x = Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180) -
-            Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos((lon2-lon1)*Math.PI/180);
-  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-}
-
-/* ============================================================
-   Flight data fetch — airplanes.live free public API
-   No auth, no API key, no proxy needed. Rate limited to 1 req/sec
-   on their end; we poll far slower than that (tied to radar sweep).
-   Docs: https://airplanes.live/api-guide/
-   ============================================================ */
-const AIRPLANES_LIVE_BASE = "https://api.airplanes.live/v2";
-
-let consecutiveFailures = 0;
-let lastGoodData = null;
-
-async function fetchFlights() {
-  const radiusNm = Math.min(CONFIG.RADIUS_KM / 1.852, 250);
-  const url = `${AIRPLANES_LIVE_BASE}/point/${CONFIG.CENTER_LAT}/${CONFIG.CENTER_LON}/${radiusNm.toFixed(1)}`;
-
-  try {
-    const res = await fetch(url);
-
-    if (res.status === 429) {
-      consecutiveFailures++;
-      setStatus("warn", "RATE LIMITED");
-      return lastGoodData;
-    }
-    if (!res.ok) {
-      consecutiveFailures++;
-      setStatus("warn", `OFFLINE (HTTP ${res.status})`);
-      return lastGoodData;
-    }
-
-    const data = await res.json();
-    if (!data || !Array.isArray(data.ac)) {
-      consecutiveFailures++;
-      setStatus("warn", "OFFLINE (bad payload)");
-      return lastGoodData;
-    }
-
-    consecutiveFailures = 0;
-    lastGoodData = data;
-    setStatus("ok", "LIVE");
-    return data;
-
-  } catch (e) {
-    consecutiveFailures++;
-    setStatus("warn", "OFFLINE (network error)");
-    console.warn("FlightWall: fetch threw an error:", e);
-    return lastGoodData;
-  }
-}
-
-function setStatus(kind, text) {
-  const dot = document.getElementById("statusDot");
-  const label = document.getElementById("statusText");
-  label.textContent = text;
-  dot.classList.toggle("warn", kind === "warn");
-}
-
-/* ============================================================
-   Parse airplanes.live aircraft objects into flight objects.
-   Named fields: hex, flight (callsign), r (registration), t (type
-   code), desc (full type description), ownOp (operator/airline),
-   lat, lon, alt_baro, gs (kt), track (deg), baro_rate (ft/min).
-   ============================================================ */
-function parseStates(raw) {
-  if (!raw || !raw.ac) return [];
-  return raw.ac
-    .filter(a => a.lat != null && a.lon != null)
-    .map(a => {
-      const lat = a.lat, lon = a.lon;
-      const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
-      const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
-      const onGround = a.alt_baro === "ground";
-      const altFt = (typeof a.alt_baro === "number") ? Math.round(a.alt_baro) : (onGround ? 0 : null);
-      const callsign = (a.flight || "").trim() || "—";
-      // airline ICAO code is conventionally the first 3 letters of the
-      // callsign when it's a flight-number callsign (e.g. QFA12 -> QFA).
-      // Private/GA registrations (e.g. VH-ABC) won't match this pattern,
-      // which is fine — they simply won't have a logo to look up.
-      // We strip spaces to be robust against padded inputs.
-      const cleanCallsign = callsign.replace(/\s+/g, "");
-      const airlineIcaoMatch = cleanCallsign.match(/^([A-Z]{3})\d/);
-      return {
-        icao24: (a.hex || "—").toUpperCase(),
-        callsign,
-        airlineIcao: airlineIcaoMatch ? airlineIcaoMatch[1] : null,
-        reg: a.r || null,
-        typeCode: a.t || null,
-        typeDesc: a.desc || null,
-        operator: a.ownOp || null,
-        mil: !!a.mil,
-        lon, lat,
-        altFt,
-        onGround,
-        spdKt: a.gs != null ? Math.round(a.gs) : null,
-        track: a.track != null ? Math.round(a.track) : null,
-        vrate: a.baro_rate != null ? Math.round(a.baro_rate) : null,
-        distKm,
-        brg
-      };
-    })
-    .filter(f => f.distKm <= CONFIG.RADIUS_KM)
-    .filter(f => !CONFIG.HIDE_GROUND || !f.onGround)
-    .sort((a, b) => a.distKm - b.distKm);
-}
-
-function headingArrow(track) {
-  if (track == null) return "—";
-  const arrows = ["↑","↗","→","↘","↓","↙","←","↖"];
-  return arrows[Math.round(track / 45) % 8];
-}
-
-// Returns rich climb/descend info: icon, css class, short label (for
-// tight spaces like board rows) and a full label with explicit rate.
-function vrateInfo(vrate) {
-  if (vrate == null) return { icon: "•", cls: "level", label: "—", full: "Level — no data" };
-  if (vrate > 150) {
-    return { icon: "▲", cls: "climb", label: `▲ ${Math.abs(vrate).toLocaleString()}`, full: `Climbing at ${Math.abs(vrate).toLocaleString()} ft/min` };
-  }
-  if (vrate < -150) {
-    return { icon: "▼", cls: "descend", label: `▼ ${Math.abs(vrate).toLocaleString()}`, full: `Descending at ${Math.abs(vrate).toLocaleString()} ft/min` };
-  }
-  return { icon: "•", cls: "level", label: "Level", full: "Level flight" };
-}
-
-/* ============================================================
-   Get Aircraft Category — Classifies aircraft type based on ICAO
-   description, model type codes, and military status.
-   ============================================================ */
-function getAircraftCategory(f) {
-  const desc = f.typeDesc ? f.typeDesc.toUpperCase() : "";
-  const code = f.typeCode ? f.typeCode.toUpperCase() : "";
-  
-  // 1. Helicopter: ICAO category starting with H (e.g. H2T, H1P, H1T)
-  if (desc.startsWith("H")) {
-    return "helicopter";
-  }
-  
-  // 2. Fighter jet: military flag is true + jet engine, OR common fighter code patterns
-  const isFighterCode = /^(F14|F15|F16|F18|F22|F35|FA18|A10|TYF|JSF|MIG|SU)/.test(code);
-  if (isFighterCode || (f.mil && desc.endsWith("J"))) {
-    return "fighter";
-  }
-  
-  // 3. Widebody / Heavy Jet: L4J/L3J descriptions or common widebody aircraft codes
-  const isWidebodyCode = /^(A33|A34|A35|A38|B74|B76|B77|B78)/.test(code);
-  if (desc.startsWith("L4J") || desc.startsWith("L3J") || isWidebodyCode) {
-    return "widebody";
-  }
-  
-  // 4. Turboprop: Description ends with T (and not helicopter, e.g. L2T, L4T)
-  if (desc.endsWith("T")) {
-    return "turboprop";
-  }
-  
-  // 5. Light Piston plane: Description ends with P (e.g. L1P, L2P) or starts with L1 or L0
-  if (desc.endsWith("P") || desc.startsWith("L1") || desc.startsWith("L0")) {
-    return "light";
-  }
-  
-  // 6. Standard Jet: Description ends with J (e.g. L2J)
-  if (desc.endsWith("J")) {
-    return "jet";
-  }
-  
-  return "default";
-}
-
-/* ============================================================
-   Airline logo lookup — open, no-auth logo set maintained by the
-   Airframes.io project (community ADS-B ecosystem), keyed by the
-   airline's 3-letter ICAO code. Free, no API key, but unofficial —
-   not every airline is guaranteed to have a logo, so every <img>
-   using this MUST have an onerror fallback to hide gracefully and
-   fall back to text (operator name), never a broken-image icon.
-   ============================================================ */
-const AIRLINE_LOGO_BASE = "https://raw.githubusercontent.com/airframesio/airline-images/main/fr24_logos";
-
-function airlineLogoUrl(airlineIcao) {
-  if (!airlineIcao) return null;
-  return `${AIRLINE_LOGO_BASE}/${airlineIcao}.png`;
-}
-
-// Shared onerror handler string for logo <img> tags: hides the image
-// element if it fails to load, so layout collapses gracefully instead
-// of showing a broken-image icon.
-const LOGO_ONERROR = `this.style.display='none'; this.dataset.failed='true';`;
-
-/* ============================================================
-   Unit conversion helpers
-   ============================================================ */
-function fmtDist(km) {
-  if (CONFIG.UNITS === "imperial") return `${Math.round(km / 1.60934)} mi`;
-  return `${Math.round(km)} km`;
-}
-function fmtAlt(ft) {
-  if (ft == null) return "—";
-  if (CONFIG.UNITS === "imperial") return ft.toLocaleString() + " ft";
-  return Math.round(ft * 0.3048).toLocaleString() + " m";
-}
-function fmtSpd(kt) {
-  if (kt == null) return "—";
-  if (CONFIG.UNITS === "imperial") return Math.round(kt * 1.15078) + " mph";
-  return Math.round(kt * 1.852) + " km/h";
-}
-
-/* ============================================================
-   Track-lock — follow a specific aircraft by callsign or hex ID
-   ============================================================ */
-let trackedId = null;
-
-function setTrackedId(id) {
-  trackedId = id ? id.trim().toUpperCase() : null;
-  const wrap = document.getElementById("trackInputWrap");
-  const input = document.getElementById("trackInput");
-  wrap.classList.toggle("locked", !!trackedId);
-  input.value = trackedId || "";
-  try { localStorage.setItem("flightwall_tracked", trackedId || ""); } catch (e) {}
-}
-
-/* ============================================================
-   Altitude → color band (radar icons + visual reference)
-   ============================================================ */
-function altitudeColor(altFt) {
-  if (altFt == null) return "#5A6472";
-  if (altFt < 3000) return "#F2C879";
-  if (altFt < 15000) return "#E0A85F";
-  return "#5FD4D4";
-}
-
-/* ============================================================
-   Position history — short rolling trail per aircraft (by icao24)
-   ============================================================ */
-const TRAIL_LENGTH = 20; // ~2.5 min of history at the default 8s sweep interval — enough to trace a turn or approach
-const STALE_MS = 5 * 60 * 1000;
-const trailHistory = new Map();
-
-function updateTrailHistory(flights) {
-  const now = Date.now();
-  const seen = new Set();
-  flights.forEach(f => {
-    seen.add(f.icao24);
-    const entry = trailHistory.get(f.icao24) || { points: [], lastSeen: now };
-    entry.points.push({ distKm: f.distKm, brg: f.brg });
-    if (entry.points.length > TRAIL_LENGTH) entry.points.shift();
-    entry.lastSeen = now;
-    trailHistory.set(f.icao24, entry);
-  });
-  for (const [icao24, entry] of trailHistory) {
-    if (!seen.has(icao24) && (now - entry.lastSeen) > STALE_MS) trailHistory.delete(icao24);
-  }
-}
-
-/* ============================================================
-   Render: board (split-flap list)
-   ============================================================ */
-function renderBoard(flights) {
-  const board = document.getElementById("board");
-  if (!flights.length) {
-    board.innerHTML = `<div class="empty-state">
-      <div class="big">NO TRAFFIC IN RANGE</div>
-      <div>Watching ${fmtDist(CONFIG.RADIUS_KM)} around your location&hellip;</div>
-    </div>`;
-    return;
-  }
-  const nearestId = flights[0] ? flights[0].icao24 : null;
-  const rows = flights.slice(0, CONFIG.MAX_ROWS).map(f => {
-    const isLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
-    const isSelected = selectedId === f.icao24;
-    const isNearest = f.icao24 === nearestId;
-    const vr = vrateInfo(f.vrate);
-    const logoUrl = airlineLogoUrl(f.airlineIcao);
-    const logoHtml = logoUrl
-      ? `<img class="airline-logo" src="${logoUrl}" alt="" onerror="${LOGO_ONERROR}">`
-      : "";
-    const category = getAircraftCategory(f);
-    const altColor = altitudeColor(f.altFt);
-    const iconRotation = f.track != null ? f.track : 0;
-    const iconHtml = `<svg class="actype-icon" viewBox="-12 -12 24 24" style="width: 14px; height: 14px; fill: ${altColor}; stroke: var(--bg); stroke-width: 0.5; transform: rotate(${iconRotation}deg);"><use href="#plane_${category}"></use></svg>`;
-    
-    return `
-    <div class="row ${isLocked ? "locked" : ""} ${isNearest ? "nearest" : ""} ${isSelected ? "selected-row" : ""}" data-id="${f.icao24}" data-callsign="${f.callsign}">
-      <div class="callsign-cell">
-        ${logoHtml}
-        <div class="callsign-text">
-          <div class="callsign">${f.callsign}</div>
-          <div class="operator">${f.operator || "&mdash;"}</div>
-        </div>
-      </div>
-      <div class="reg">${f.reg || f.icao24}</div>
-      <div class="actype">
-        ${iconHtml}
-        <div class="actype-text">
-          ${f.typeDesc || f.typeCode || "Unknown type"}
-          ${f.typeCode ? `<span class="typecode">${f.typeCode}</span>` : ""}
-        </div>
-      </div>
-      <div class="alt">${fmtAlt(f.altFt)}</div>
-      <div class="spd">${fmtSpd(f.spdKt)}</div>
-      <div class="hdg"><span class="hdg-arrow">${headingArrow(f.track)}</span>${f.track != null ? f.track + "°" : "—"}</div>
-      <div class="vrate-cell ${vr.cls}" title="${vr.full}">${vr.label}</div>
-    </div>`;
-  }).join("");
-  board.innerHTML = rows;
-
-  board.querySelectorAll(".row").forEach(row => {
-    row.addEventListener("click", () => {
-      const id = row.getAttribute("data-id");
-      selectAircraft(id);
-    });
-  });
-}
-
-/* ============================================================
-   Aircraft selection — clicking a row or a radar icon opens the
-   detail panel for that specific aircraft (separate from track-lock,
-   which persistently follows an aircraft across refreshes). If
-   nothing is selected, the panel defaults to showing the nearest
-   aircraft, same as before.
-   ============================================================ */
-let selectedId = null; // icao24 of the aircraft whose details are shown
-
-function selectAircraft(icao24) {
-  selectedId = icao24;
-  if (lastGoodData) {
-    const flights = parseStates(lastGoodData);
-    renderDetailPanel(flights);
-    renderBoard(flights);
-    renderRadar(flights);
-  }
-}
-
-/* ============================================================
-   Render: detail panel — shows the selected aircraft if one is
-   chosen (via tap on radar or board row), otherwise defaults to
-   the nearest aircraft. This replaces the old "nearest-only" blob.
-   ============================================================ */
-function renderDetailPanel(flights) {
-  const blob = document.getElementById("nearest-blob");
-  if (!flights.length) { blob.classList.remove("show"); return; }
-
-  let f = selectedId ? flights.find(fl => fl.icao24 === selectedId) : null;
-  const showingSelected = !!f;
-  if (!f) f = flights[0]; // fall back to nearest if selection has left range
-
-  blob.classList.add("show");
-  document.getElementById("nbLabel").textContent = showingSelected ? "SELECTED AIRCRAFT" : "NEAREST AIRCRAFT";
-
-  const logoUrl = airlineLogoUrl(f.airlineIcao);
-  const logoEl = document.getElementById("nbLogo");
-  if (logoUrl) {
-    logoEl.src = logoUrl;
-    logoEl.style.display = "";
-    logoEl.onerror = function() { this.style.display = "none"; };
-  } else {
-    logoEl.style.display = "none";
-  }
-
-  document.getElementById("nbCallsign").textContent = f.callsign;
-  document.getElementById("nbOperator").textContent = f.operator || "Operator unknown";
-  document.getElementById("nbType").textContent = f.typeDesc || f.typeCode || "Aircraft type unknown";
-  document.getElementById("nbDist").textContent = fmtDist(f.distKm);
-  document.getElementById("nbAlt").textContent = fmtAlt(f.altFt);
-  document.getElementById("nbSpd").textContent = fmtSpd(f.spdKt);
-
-  const vr = vrateInfo(f.vrate);
-  const vrateEl = document.getElementById("nbVrate");
-  vrateEl.className = "nb-vrate " + vr.cls;
-  vrateEl.textContent = vr.full;
-
-  const trackBtn = document.getElementById("nbTrackBtn");
-  trackBtn.textContent = (trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId)) ? "STOP TRACKING" : "TRACK THIS FLIGHT";
-  trackBtn.onclick = () => {
-    const isCurrentlyLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
-    setTrackedId(isCurrentlyLocked ? null : (f.callsign !== "—" ? f.callsign : f.icao24));
-    renderDetailPanel(flights);
-  };
-}
-
-/* ============================================================
-   Airport runway outlines — overlaid on the radar so takeoffs and
-   landings are visually anchored to real runway geometry, not just
-   open airspace. Each runway is defined by its true bearing (one
-   direction; the reciprocal end is bearing+180) and real length,
-   anchored at the airport reference point (ARP). Centerlines are
-   offset slightly apart for parallel runways to roughly match
-   real-world spacing. This is a visual reference for a hobby
-   display, not a navigation chart — good enough to recognize
-   "that's the runway," not precise enough for anything operational.
-
-   Source: published ARP coordinates + runway bearings/lengths
-   (OurAirports, Sydney Airport runway documentation).
-   ============================================================ */
-const AIRPORT_RUNWAYS = {
-  // keyed by a rounded "lat,lon" so we can match against CONFIG's
-  // current center without floating point exact-match issues
-  "-33.94,151.18": {
-    name: "Sydney (YSSY)",
-    arpLat: -33.946098,
-    arpLon: 151.177002,
-    runways: [
-      // [label1, label2, trueBearingDeg, lengthMeters, parallelOffsetMeters, perpDirectionDeg]
-      { labels: ["16R", "34L"], bearing: 160, lengthM: 3962, offsetM: -180, offsetDir: 70 },
-      { labels: ["16L", "34R"], bearing: 160, lengthM: 2438, offsetM: 180,  offsetDir: 70 },
-      { labels: ["07", "25"],   bearing: 70,  lengthM: 2530, offsetM: 0,    offsetDir: 160 }
-    ]
-  }
+const ICAO_TO_IATA = {
+  "QFA": "QF", "CPA": "CX", "SIA": "SQ", "ANZ": "NZ", "UAL": "UA",
+  "AAL": "AA", "DLH": "LH", "MAS": "MH", "THA": "TG", "JAL": "JL",
+  "ANA": "NH", "ETD": "EY", "UAE": "EK", "BAW": "BA", "VIR": "VS",
+  "VOZ": "VA", "JST": "JQ", "SWR": "LX", "KLM": "KL", "AFR": "AF",
+  "CCA": "CA", "CES": "MU", "CSN": "CZ", "HDA": "KA", "HAL": "HA",
+  "CHH": "HU", "FDX": "FX", "UPS": "5X", "TGW": "TR"
 };
 
-/* ============================================================
-   Geography overlay lines — waterways and highways coordinates
-   ============================================================ */
+// Geography overlay lines — waterways and highways coordinates (expanded)
 const GEOGRAPHY = {
   waterways: [
     // Sydney Harbour & Parramatta River
@@ -1100,6 +847,42 @@ const GEOGRAPHY = {
       { lat: -34.020, lon: 151.230 },
       { lat: -34.060, lon: 151.150 },
       { lat: -34.080, lon: 151.160 }
+    ],
+    // Hawkesbury River & Pittwater
+    [
+      { lat: -33.600, lon: 150.820 },
+      { lat: -33.560, lon: 150.900 },
+      { lat: -33.430, lon: 150.980 },
+      { lat: -33.450, lon: 151.100 },
+      { lat: -33.540, lon: 151.250 },
+      { lat: -33.580, lon: 151.300 }
+    ],
+    [
+      { lat: -33.650, lon: 151.300 },
+      { lat: -33.620, lon: 151.300 },
+      { lat: -33.550, lon: 151.310 }
+    ],
+    // Port Hacking
+    [
+      { lat: -34.070, lon: 151.150 },
+      { lat: -34.080, lon: 151.100 },
+      { lat: -34.080, lon: 151.050 }
+    ],
+    // Wollongong Coastline
+    [
+      { lat: -34.150, lon: 150.990 },
+      { lat: -34.250, lon: 150.930 },
+      { lat: -34.420, lon: 150.900 },
+      { lat: -34.500, lon: 150.870 },
+      { lat: -34.530, lon: 150.800 },
+      { lat: -34.560, lon: 150.850 },
+      { lat: -34.530, lon: 150.880 }
+    ],
+    // Newcastle / Lake Macquarie Coastline
+    [
+      { lat: -33.150, lon: 151.630 },
+      { lat: -33.000, lon: 151.700 },
+      { lat: -32.920, lon: 151.780 }
     ]
   ],
   botanyBay: [
@@ -1138,8 +921,726 @@ const GEOGRAPHY = {
   ]
 };
 
+// Sydney Airport Close-up layout (T1, T2/T3, Taxiways)
+const AIRPORT_DETAILS = {
+  "-33.94,151.18": {
+    terminals: [
+      // International T1
+      [
+        { lat: -33.9430, lon: 151.1660 },
+        { lat: -33.9432, lon: 151.1690 },
+        { lat: -33.9442, lon: 151.1690 },
+        { lat: -33.9444, lon: 151.1708 },
+        { lat: -33.9448, lon: 151.1706 },
+        { lat: -33.9446, lon: 151.1690 },
+        { lat: -33.9456, lon: 151.1690 },
+        { lat: -33.9464, lon: 151.1695 },
+        { lat: -33.9466, lon: 151.1685 },
+        { lat: -33.9454, lon: 151.1680 },
+        { lat: -33.9448, lon: 151.1665 },
+        { lat: -33.9435, lon: 151.1655 }
+      ],
+      // Domestic T2/T3
+      [
+        { lat: -33.9420, lon: 151.1795 },
+        { lat: -33.9424, lon: 151.1818 },
+        { lat: -33.9436, lon: 151.1822 },
+        { lat: -33.9448, lon: 151.1834 },
+        { lat: -33.9452, lon: 151.1822 },
+        { lat: -33.9442, lon: 151.1812 },
+        { lat: -33.9438, lon: 151.1798 },
+        { lat: -33.9428, lon: 151.1792 }
+      ]
+    ],
+    taxiways: [
+      // Taxiway Alpha (West parallel)
+      [
+        { lat: -33.9310, lon: 151.1700 },
+        { lat: -33.9620, lon: 151.1710 }
+      ],
+      // Taxiway Bravo
+      [
+        { lat: -33.9310, lon: 151.1730 },
+        { lat: -33.9620, lon: 151.1740 }
+      ],
+      // Taxiway Juliet/Kilo (East parallel)
+      [
+        { lat: -33.9390, lon: 151.1822 },
+        { lat: -33.9590, lon: 151.1832 }
+      ],
+      // Taxiway Echo/Yankee (07/25 parallel)
+      [
+        { lat: -33.9480, lon: 151.1650 },
+        { lat: -33.9440, lon: 151.1920 }
+      ]
+    ]
+  }
+};
+
+const LANDMARKS = [
+  { name: "Sydney Airport", lat: -33.946, lon: 151.177, minRadius: 10, maxRadius: 150 },
+  { name: "Newington", lat: -33.837, lon: 151.056, minRadius: 3, maxRadius: 40 },
+  { name: "Sydney CBD", lat: -33.868, lon: 151.209, minRadius: 10, maxRadius: 80 },
+  { name: "Bankstown", lat: -33.924, lon: 151.052, minRadius: 10, maxRadius: 80 },
+  { name: "Richmond", lat: -33.600, lon: 150.780, minRadius: 40, maxRadius: 150 },
+  { name: "Wollongong", lat: -34.425, lon: 150.893, minRadius: 80, maxRadius: 450 },
+  { name: "Newcastle", lat: -32.927, lon: 151.776, minRadius: 80, maxRadius: 450 }
+];
+
+const AIRPORT_RUNWAYS = {
+  "-33.94,151.18": {
+    name: "Sydney (YSSY)",
+    arpLat: -33.946098,
+    arpLon: 151.177002,
+    runways: [
+      { labels: ["16R", "34L"], bearing: 160, lengthM: 3962, offsetM: -180, offsetDir: 70 },
+      { labels: ["16L", "34R"], bearing: 160, lengthM: 2438, offsetM: 180,  offsetDir: 70 },
+      { labels: ["07", "25"],   bearing: 70,  lengthM: 2530, offsetM: 0,    offsetDir: 160 }
+    ]
+  }
+};
+
+// Restore saved preferences from a previous session
+(function restoreSaved() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("flightwall_location"));
+    if (saved && typeof saved.lat === "number" && typeof saved.lon === "number") {
+      CONFIG.CENTER_LAT = saved.lat;
+      CONFIG.CENTER_LON = saved.lon;
+      CONFIG.LOCATION_NAME = saved.name || "Custom location";
+    }
+  } catch (e) {}
+  try {
+    const savedUnits = localStorage.getItem("flightwall_units");
+    if (savedUnits === "metric" || savedUnits === "imperial") CONFIG.UNITS = savedUnits;
+  } catch (e) {}
+  try {
+    const savedHideGround = localStorage.getItem("flightwall_hide_ground");
+    if (savedHideGround !== null) CONFIG.HIDE_GROUND = savedHideGround === "true";
+  } catch (e) {}
+  try {
+    const savedRadarOnly = localStorage.getItem("flightwall_radar_only");
+    if (savedRadarOnly !== null) {
+      CONFIG.RADAR_ONLY = savedRadarOnly === "true";
+      setTimeout(() => {
+        const layoutBtn = document.getElementById("layoutToggleBtn");
+        if (layoutBtn) {
+          layoutBtn.classList.toggle("active", CONFIG.RADAR_ONLY);
+          layoutBtn.textContent = CONFIG.RADAR_ONLY ? "SPLIT VIEW" : "RADAR ONLY";
+        }
+        const bw = document.getElementById("board-wrap");
+        if (bw) bw.style.display = CONFIG.RADAR_ONLY ? "none" : "flex";
+        const rw = document.getElementById("radar-wrap");
+        if (rw) rw.style.flex = CONFIG.RADAR_ONLY ? "1 0 100%" : "0 0 42%";
+      }, 0);
+    }
+  } catch (e) {}
+  try {
+    const savedShowHotspots = localStorage.getItem("flightwall_show_hotspots");
+    if (savedShowHotspots !== null) CONFIG.SHOW_HOTSPOTS = savedShowHotspots === "true";
+  } catch (e) {}
+  
+  // Load cached flight routes from LocalStorage
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("route_")) {
+        const callsign = key.substring(6);
+        routeCache.set(callsign, JSON.parse(localStorage.getItem(key)));
+      }
+    }
+  } catch (e) {}
+})();
+
+/* ============================================================
+   Geometry helpers
+   ============================================================ */
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function bearingFromCenter(lat1, lon1, lat2, lon2) {
+  const y = Math.sin((lon2-lon1)*Math.PI/180) * Math.cos(lat2*Math.PI/180);
+  const x = Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180) -
+            Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos((lon2-lon1)*Math.PI/180);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
+function getIataFlightNumber(callsign) {
+  if (!callsign || callsign === "—") return "";
+  const match = callsign.replace(/\s+/g, "").match(/^([A-Z]{3})(\d+[A-Z]?)$/);
+  if (match) {
+    const icao = match[1];
+    const num = match[2];
+    const iata = ICAO_TO_IATA[icao];
+    if (iata) {
+      return `${iata}${num}`;
+    }
+  }
+  return "";
+}
+
+/* ============================================================
+   Flight data fetch — airplanes.live free public API
+   ============================================================ */
+const AIRPLANES_LIVE_BASE = "https://api.airplanes.live/v2";
+
+let consecutiveFailures = 0;
+let lastGoodData = null;
+
+async function fetchFlights() {
+  const radiusNm = Math.min(CONFIG.RADIUS_KM / 1.852, 250);
+  const url = `${AIRPLANES_LIVE_BASE}/point/${CONFIG.CENTER_LAT}/${CONFIG.CENTER_LON}/${radiusNm.toFixed(1)}`;
+
+  try {
+    const res = await fetch(url);
+
+    if (res.status === 429) {
+      consecutiveFailures++;
+      setStatus("warn", "RATE LIMITED");
+      return lastGoodData;
+    }
+    if (!res.ok) {
+      consecutiveFailures++;
+      setStatus("warn", `OFFLINE (HTTP ${res.status})`);
+      return lastGoodData;
+    }
+
+    const data = await res.json();
+    if (!data || !Array.isArray(data.ac)) {
+      consecutiveFailures++;
+      setStatus("warn", "OFFLINE (bad payload)");
+      return lastGoodData;
+    }
+
+    consecutiveFailures = 0;
+    lastGoodData = data;
+    setStatus("ok", "LIVE");
+    return data;
+
+  } catch (e) {
+    consecutiveFailures++;
+    setStatus("warn", "OFFLINE (network error)");
+    console.warn("FlightWall: fetch threw an error:", e);
+    return lastGoodData;
+  }
+}
+
+async function fetchRoute(callsign) {
+  if (!callsign || callsign === "—") return;
+  const clean = callsign.replace(/\s+/g, "");
+  if (routeCache.has(clean) || pendingRouteFetches.has(clean)) return;
+
+  pendingRouteFetches.add(clean);
+  try {
+    const res = await fetch(`https://api.adsbdb.com/v0/callsign/${clean}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.response && data.response.flightroute) {
+        const route = data.response.flightroute;
+        routeCache.set(clean, route);
+        try { localStorage.setItem(`route_${clean}`, JSON.stringify(route)); } catch (e) {}
+        
+        // Redraw lists/panels now that route is cached
+        if (lastGoodData) {
+          const flights = parseStates(lastGoodData);
+          renderBoard(flights);
+          renderDetailPanel(flights);
+          renderRadar(flights);
+        }
+      } else {
+        const notFoundObj = { notFound: true };
+        routeCache.set(clean, notFoundObj);
+        try { localStorage.setItem(`route_${clean}`, JSON.stringify(notFoundObj)); } catch (e) {}
+      }
+    } else {
+      const notFoundObj = { notFound: true };
+      routeCache.set(clean, notFoundObj);
+      try { localStorage.setItem(`route_${clean}`, JSON.stringify(notFoundObj)); } catch (e) {}
+    }
+  } catch (e) {
+    console.warn("Failed fetching route:", clean, e);
+  } finally {
+    pendingRouteFetches.delete(clean);
+  }
+}
+
+function setStatus(kind, text) {
+  const dot = document.getElementById("statusDot");
+  const label = document.getElementById("statusText");
+  label.textContent = text;
+  dot.classList.toggle("warn", kind === "warn");
+}
+
+/* ============================================================
+   Parse airplanes.live aircraft objects into flight objects.
+   ============================================================ */
+function parseStates(raw) {
+  if (!raw || !raw.ac) return [];
+  const now = Date.now();
+  const seenIcaos = new Set();
+
+  const parsed = raw.ac
+    .filter(a => a.lat != null && a.lon != null)
+    .map(a => {
+      const lat = a.lat, lon = a.lon;
+      const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
+      const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
+      const onGround = a.alt_baro === "ground";
+      const altFt = (typeof a.alt_baro === "number") ? Math.round(a.alt_baro) : (onGround ? 0 : null);
+      const callsign = (a.flight || "").trim() || "—";
+      const cleanCallsign = callsign.replace(/\s+/g, "");
+      const airlineIcaoMatch = cleanCallsign.match(/^([A-Z]{3})\d/);
+      
+      return {
+        icao24: (a.hex || "—").toUpperCase(),
+        callsign,
+        airlineIcao: airlineIcaoMatch ? airlineIcaoMatch[1] : null,
+        reg: a.r || null,
+        typeCode: a.t || null,
+        typeDesc: a.desc || null,
+        operator: a.ownOp || null,
+        mil: !!a.mil,
+        lon, lat,
+        altFt,
+        onGround,
+        spdKt: a.gs != null ? Math.round(a.gs) : null,
+        track: a.track != null ? Math.round(a.track) : null,
+        vrate: a.baro_rate != null ? Math.round(a.baro_rate) : null,
+        distKm,
+        brg
+      };
+    });
+
+  // Zero-speed tracking & cleanup
+  parsed.forEach(f => seenIcaos.add(f.icao24));
+  for (const [icao24] of zeroSpeedTimestamps) {
+    if (!seenIcaos.has(icao24)) zeroSpeedTimestamps.delete(icao24);
+  }
+
+  // Active Runway Usage Detection around Sydney Airport
+  if (Math.abs(CONFIG.CENTER_LAT - (-33.946098)) < 0.05 && Math.abs(CONFIG.CENTER_LON - 151.177002) < 0.05) {
+    parsed.forEach(f => {
+      if (f.altFt !== null && f.altFt < 1500 && f.spdKt !== null && f.spdKt > 40) {
+        const distToArp = haversineKm(-33.946098, 151.177002, f.lat, f.lon);
+        if (distToArp < 4) {
+          if (f.track !== null) {
+            if (f.track >= 140 && f.track <= 180) {
+              runwayActivity["16R"] = now;
+              runwayActivity["16L"] = now;
+            } else if (f.track >= 320 && f.track <= 360) {
+              runwayActivity["34L"] = now;
+              runwayActivity["34R"] = now;
+            } else if (f.track >= 50 && f.track <= 90) {
+              runwayActivity["07"] = now;
+            } else if (f.track >= 230 && f.track <= 270) {
+              runwayActivity["25"] = now;
+            }
+          }
+        }
+      }
+    });
+  }
+
+  return parsed
+    .filter(f => f.distKm <= CONFIG.RADIUS_KM)
+    .filter(f => {
+      if (!f.onGround) return true; // flying is always shown
+      if (!CONFIG.HIDE_GROUND) return true; // show all ground planes
+
+      if (f.spdKt > 0) {
+        zeroSpeedTimestamps.delete(f.icao24);
+        return true; // taxiing planes are shown!
+      }
+      // Plane is on ground, speed is 0
+      if (!zeroSpeedTimestamps.has(f.icao24)) {
+        zeroSpeedTimestamps.set(f.icao24, now);
+        return true; // show for the first minute
+      }
+      const elapsed = now - zeroSpeedTimestamps.get(f.icao24);
+      if (elapsed < 60000) return true; // show if under 1 minute
+
+      return false; // hide if stationary for more than 1 minute
+    })
+    .sort((a, b) => a.distKm - b.distKm);
+}
+
+function headingArrow(track) {
+  if (track == null) return "—";
+  const arrows = ["↑","↗","→","↘","↓","↙","←","↖"];
+  return arrows[Math.round(track / 45) % 8];
+}
+
+function vrateInfo(vrate) {
+  if (vrate == null) return { icon: "•", cls: "level", label: "—", full: "Level — no data" };
+  if (vrate > 150) {
+    return { icon: "▲", cls: "climb", label: `▲ ${Math.abs(vrate).toLocaleString()}`, full: `Climbing at ${Math.abs(vrate).toLocaleString()} ft/min` };
+  }
+  if (vrate < -150) {
+    return { icon: "▼", cls: "descend", label: `▼ ${Math.abs(vrate).toLocaleString()}`, full: `Descending at ${Math.abs(vrate).toLocaleString()} ft/min` };
+  }
+  return { icon: "•", cls: "level", label: "Level", full: "Level flight" };
+}
+
+/* ============================================================
+   Get Aircraft Category — Classifies aircraft type
+   ============================================================ */
+function getAircraftCategory(f) {
+  const desc = f.typeDesc ? f.typeDesc.toUpperCase() : "";
+  const code = f.typeCode ? f.typeCode.toUpperCase() : "";
+  
+  if (code === "A388") {
+    return "a380";
+  }
+  if (code.startsWith("B74")) {
+    return "b747";
+  }
+  if (desc.startsWith("H")) {
+    return "helicopter";
+  }
+  
+  const isFighterCode = /^(F14|F15|F16|F18|F22|F35|FA18|A10|TYF|JSF|MIG|SU)/.test(code);
+  if (isFighterCode || (f.mil && desc.endsWith("J"))) {
+    return "fighter";
+  }
+  
+  const isWidebodyCode = /^(A33|A34|A35|A38|B74|B76|B77|B78)/.test(code);
+  if (desc.startsWith("L4J") || desc.startsWith("L3J") || isWidebodyCode) {
+    return "widebody";
+  }
+  
+  if (desc.endsWith("T")) {
+    return "turboprop";
+  }
+  
+  if (desc.endsWith("P") || desc.startsWith("L1") || desc.startsWith("L0")) {
+    return "light";
+  }
+  
+  if (desc.endsWith("J")) {
+    return "jet";
+  }
+  
+  return "default";
+}
+
+/* ============================================================
+   Airline logo lookup
+   ============================================================ */
+const AIRLINE_LOGO_BASE = "https://raw.githubusercontent.com/airframesio/airline-images/main/fr24_logos";
+
+function airlineLogoUrl(airlineIcao) {
+  if (!airlineIcao) return null;
+  return `${AIRLINE_LOGO_BASE}/${airlineIcao}.png`;
+}
+
+const LOGO_ONERROR = `this.style.display='none'; this.dataset.failed='true';`;
+
+/* ============================================================
+   Unit conversion helpers
+   ============================================================ */
+function fmtDist(km) {
+  if (CONFIG.UNITS === "imperial") return `${Math.round(km / 1.60934)} mi`;
+  return `${Math.round(km)} km`;
+}
+function fmtAlt(ft) {
+  if (ft == null) return "—";
+  if (CONFIG.UNITS === "imperial") return ft.toLocaleString() + " ft";
+  return Math.round(ft * 0.3048).toLocaleString() + " m";
+}
+function fmtSpd(kt) {
+  if (kt == null) return "—";
+  if (CONFIG.UNITS === "imperial") return Math.round(kt * 1.15078) + " mph";
+  return Math.round(kt * 1.852) + " km/h";
+}
+
+/* ============================================================
+   Track-lock — follow a specific aircraft by callsign or hex ID
+   ============================================================ */
+let trackedId = null;
+
+function setTrackedId(id) {
+  trackedId = id ? id.trim().toUpperCase() : null;
+  const wrap = document.getElementById("trackInputWrap");
+  const input = document.getElementById("trackInput");
+  wrap.classList.toggle("locked", !!trackedId);
+  input.value = trackedId || "";
+  try { localStorage.setItem("flightwall_tracked", trackedId || ""); } catch (e) {}
+}
+
+/* ============================================================
+   Altitude → color band (radar icons + visual reference)
+   ============================================================ */
+function altitudeColor(altFt) {
+  if (altFt == null) return "#5A6472";
+  if (altFt < 3000) return "#F2C879";
+  if (altFt < 15000) return "#E0A85F";
+  return "#5FD4D4";
+}
+
+/* ============================================================
+   Position history — short rolling trail per aircraft (by icao24)
+   ============================================================ */
+const TRAIL_LENGTH = 20; 
+const STALE_MS = 5 * 60 * 1000;
+const trailHistory = new Map();
+
+function updateTrailHistory(flights) {
+  const now = Date.now();
+  const seen = new Set();
+  flights.forEach(f => {
+    seen.add(f.icao24);
+    
+    // Normal trails
+    let entry = trailHistory.get(f.icao24);
+    if (!entry) {
+      entry = { points: [], lastSeen: now };
+    }
+    const lastPt = entry.points[entry.points.length - 1];
+    if (!lastPt || Math.abs(lastPt.lat - f.lat) > 0.0001 || Math.abs(lastPt.lon - f.lon) > 0.0001) {
+      entry.points.push({ lat: f.lat, lon: f.lon });
+    }
+    if (entry.points.length > TRAIL_LENGTH) entry.points.shift();
+    entry.lastSeen = now;
+    trailHistory.set(f.icao24, entry);
+    
+    // Session trails (Hot spots)
+    let sEntry = sessionTrails.get(f.icao24);
+    if (!sEntry) {
+      sEntry = { points: [], lastSeen: now };
+    }
+    const sLastPt = sEntry.points[sEntry.points.length - 1];
+    if (!sLastPt || Math.abs(sLastPt.lat - f.lat) > 0.0001 || Math.abs(sLastPt.lon - f.lon) > 0.0001) {
+      sEntry.points.push({ lat: f.lat, lon: f.lon });
+    }
+    if (sEntry.points.length > 50) sEntry.points.shift();
+    sEntry.lastSeen = now;
+    sessionTrails.set(f.icao24, sEntry);
+  });
+  
+  for (const [icao24, entry] of trailHistory) {
+    if (!seen.has(icao24) && (now - entry.lastSeen) > STALE_MS) {
+      trailHistory.delete(icao24);
+    }
+  }
+  
+  if (sessionTrails.size > 150) {
+    const sorted = [...sessionTrails.entries()].sort((a, b) => a[1].lastSeen - b[1].lastSeen);
+    for (let i = 0; i < sorted.length - 150; i++) {
+      sessionTrails.delete(sorted[i][0]);
+    }
+  }
+}
+
+/* ============================================================
+   Render: board
+   ============================================================ */
+function renderBoard(flights) {
+  const board = document.getElementById("board");
+  if (!flights.length) {
+    board.innerHTML = `<div class="empty-state">
+      <div class="big">NO TRAFFIC IN RANGE</div>
+      <div>Watching ${fmtDist(CONFIG.RADIUS_KM)} around your location&hellip;</div>
+    </div>`;
+    return;
+  }
+  const nearestId = flights[0] ? flights[0].icao24 : null;
+  const rows = flights.slice(0, CONFIG.MAX_ROWS).map(f => {
+    const isLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
+    const isSelected = selectedId === f.icao24;
+    const isNearest = f.icao24 === nearestId;
+    const vr = vrateInfo(f.vrate);
+    const logoUrl = airlineLogoUrl(f.airlineIcao);
+    const logoHtml = logoUrl
+      ? `<img class="airline-logo" src="${logoUrl}" alt="" onerror="${LOGO_ONERROR}">`
+      : "";
+    const category = getAircraftCategory(f);
+    const altColor = altitudeColor(f.altFt);
+    const iconRotation = f.track != null ? f.track : 0;
+    const iconHtml = `<svg class="actype-icon" viewBox="-12 -12 24 24" style="width: 14px; height: 14px; fill: ${altColor}; stroke: var(--bg); stroke-width: 0.5; transform: rotate(${iconRotation}deg);"><use href="#plane_${category}"></use></svg>`;
+    
+    // Add Route and IATA number lazy displays
+    const cleanCallsign = f.callsign.replace(/\s+/g, "");
+    const route = routeCache.get(cleanCallsign);
+    let routeStr = "";
+    if (route && !route.notFound) {
+      const orig = route.origin.iata_code || route.origin.icao_code || "???";
+      const dest = route.destination.iata_code || route.destination.icao_code || "???";
+      routeStr = `${orig} ✈ ${dest}`;
+    } else if (f.callsign !== "—" && !pendingRouteFetches.has(cleanCallsign)) {
+      fetchRoute(cleanCallsign);
+    }
+    
+    const iata = getIataFlightNumber(f.callsign);
+    const callsignDisplay = iata ? `${f.callsign} <span style="font-size:8.5px; color:var(--slate-bright); font-weight:normal; margin-left:2px;">(${iata})</span>` : f.callsign;
+    const routeDisplay = routeStr ? `<span style="color:var(--cyan); font-weight:600; font-size:9.5px; display:inline-block; margin-right:6px;">${routeStr}</span>` : "";
+    const operatorDisplay = f.operator ? `${routeDisplay}${f.operator}` : (routeStr || "—");
+
+    return `
+    <div class="row ${isLocked ? "locked" : ""} ${isNearest ? "nearest" : ""} ${isSelected ? "selected-row" : ""}" data-id="${f.icao24}" data-callsign="${f.callsign}">
+      <div class="callsign-cell">
+        ${logoHtml}
+        <div class="callsign-text">
+          <div class="callsign">${callsignDisplay}</div>
+          <div class="operator">${operatorDisplay}</div>
+        </div>
+      </div>
+      <div class="reg">${f.reg || f.icao24}</div>
+      <div class="actype">
+        ${iconHtml}
+        <div class="actype-text">
+          ${f.typeDesc || f.typeCode || "Unknown type"}
+          ${f.typeCode ? `<span class="typecode">${f.typeCode}</span>` : ""}
+        </div>
+      </div>
+      <div class="alt">${fmtAlt(f.altFt)}</div>
+      <div class="spd">${fmtSpd(f.spdKt)}</div>
+      <div class="hdg"><span class="hdg-arrow">${headingArrow(f.track)}</span>${f.track != null ? f.track + "°" : "—"}</div>
+      <div class="vrate-cell ${vr.cls}" title="${vr.full}">${vr.label}</div>
+    </div>`;
+  }).join("");
+  board.innerHTML = rows;
+
+  board.querySelectorAll(".row").forEach(row => {
+    row.addEventListener("click", () => {
+      const id = row.getAttribute("data-id");
+      selectAircraft(id);
+    });
+  });
+}
+
+/* ============================================================
+   Aircraft selection
+   ============================================================ */
+let selectedId = null; 
+
+function selectAircraft(icao24) {
+  selectedId = icao24;
+  if (lastGoodData) {
+    const flights = parseStates(lastGoodData);
+    renderDetailPanel(flights);
+    renderBoard(flights);
+    renderRadar(flights);
+  }
+}
+
+/* ============================================================
+   Render: detail panel
+   ============================================================ */
+function renderDetailPanel(flights) {
+  const blob = document.getElementById("nearest-blob");
+  if (!flights.length) { blob.classList.remove("show"); return; }
+
+  let f = selectedId ? flights.find(fl => fl.icao24 === selectedId) : null;
+  const showingSelected = !!f;
+  if (!f) f = flights[0]; 
+
+  blob.classList.add("show");
+  document.getElementById("nbLabel").textContent = showingSelected ? "SELECTED AIRCRAFT" : "NEAREST AIRCRAFT";
+
+  const logoUrl = airlineLogoUrl(f.airlineIcao);
+  const logoEl = document.getElementById("nbLogo");
+  if (logoUrl) {
+    logoEl.src = logoUrl;
+    logoEl.style.display = "";
+    logoEl.onerror = function() { this.style.display = "none"; };
+  } else {
+    logoEl.style.display = "none";
+  }
+
+  document.getElementById("nbCallsign").textContent = f.callsign;
+  const iata = getIataFlightNumber(f.callsign);
+  document.getElementById("nbIata").textContent = iata ? `IATA: ${iata}` : "IATA: —";
+
+  document.getElementById("nbOperator").textContent = f.operator || "Operator unknown";
+  document.getElementById("nbType").textContent = f.typeDesc || f.typeCode || "Aircraft type unknown";
+  
+  document.getElementById("nbDist").textContent = fmtDist(f.distKm);
+  document.getElementById("nbAlt").textContent = fmtAlt(f.altFt);
+  document.getElementById("nbSpd").textContent = fmtSpd(f.spdKt);
+
+  const vr = vrateInfo(f.vrate);
+  document.getElementById("nbVrateSmall").textContent = vr.label;
+  document.getElementById("nbVrateSmall").className = "val " + vr.cls;
+
+  const cleanCallsign = f.callsign.replace(/\s+/g, "");
+  const route = routeCache.get(cleanCallsign);
+  
+  const routeSec = document.getElementById("nbRouteSection");
+  const timesGrid = document.getElementById("nbTimesGrid");
+  
+  if (route && !route.notFound) {
+    routeSec.style.display = "block";
+    timesGrid.style.display = "grid";
+    
+    const origCode = route.origin.iata_code || route.origin.icao_code || "???";
+    const destCode = route.destination.iata_code || route.destination.icao_code || "???";
+    document.getElementById("nbOriginCode").textContent = origCode;
+    document.getElementById("nbDestCode").textContent = destCode;
+    
+    const origCity = route.origin.municipality || route.origin.name || "Unknown";
+    const destCity = route.destination.municipality || route.destination.name || "Unknown";
+    document.getElementById("nbOriginName").textContent = origCity;
+    document.getElementById("nbOriginName").title = route.origin.name;
+    document.getElementById("nbDestName").textContent = destCity;
+    document.getElementById("nbDestName").title = route.destination.name;
+    
+    // Total Route Distance & Progression
+    const totalDist = haversineKm(route.origin.latitude, route.origin.longitude, route.destination.latitude, route.destination.longitude);
+    const remainingDist = haversineKm(f.lat, f.lon, route.destination.latitude, route.destination.longitude);
+    const flownDist = Math.max(0, totalDist - remainingDist);
+    const pct = Math.min(100, Math.max(0, (flownDist / totalDist) * 100));
+    
+    document.getElementById("nbProgressFill").style.width = pct.toFixed(1) + "%";
+    document.getElementById("nbProgressPlane").style.left = pct.toFixed(1) + "%";
+    document.getElementById("nbProgressPct").textContent = Math.round(pct) + "%";
+    document.getElementById("nbProgressFlown").textContent = `${fmtDist(flownDist)} flown / ${fmtDist(totalDist)} total`;
+    
+    if (f.spdKt !== null && f.spdKt > 40) {
+      const speedKmH = f.spdKt * 1.852;
+      const remainingHours = remainingDist / speedKmH;
+      const elapsedHours = flownDist / speedKmH;
+      const totalHours = totalDist / speedKmH;
+      
+      function fmtHours(h) {
+        const hrs = Math.floor(h);
+        const mins = Math.round((h - hrs) * 60);
+        return `${hrs}h ${mins}m`;
+      }
+      
+      document.getElementById("nbElapsed").textContent = fmtHours(elapsedHours);
+      document.getElementById("nbRemaining").textContent = fmtHours(remainingHours);
+      
+      const etaDate = new Date(Date.now() + remainingHours * 3600000);
+      const etaStr = etaDate.toTimeString().slice(0, 5);
+      document.getElementById("nbDurationETA").textContent = `${fmtHours(totalHours)} (ETA ${etaStr})`;
+    } else {
+      document.getElementById("nbElapsed").textContent = "—";
+      document.getElementById("nbRemaining").textContent = "—";
+      document.getElementById("nbDurationETA").textContent = "Stationary / Taxiing";
+    }
+  } else {
+    routeSec.style.display = "none";
+    timesGrid.style.display = "none";
+    
+    if (f.callsign !== "—" && !pendingRouteFetches.has(cleanCallsign)) {
+      fetchRoute(cleanCallsign);
+    }
+  }
+
+  const trackBtn = document.getElementById("nbTrackBtn");
+  trackBtn.textContent = (trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId)) ? "STOP TRACKING" : "TRACK THIS FLIGHT";
+  trackBtn.onclick = () => {
+    const isCurrentlyLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
+    setTrackedId(isCurrentlyLocked ? null : (f.callsign !== "—" ? f.callsign : f.icao24));
+    renderDetailPanel(flights);
+  };
+}
+
 function getActiveAirport() {
-  // match if current center is within ~0.02deg (~2km) of a known ARP
   for (const key in AIRPORT_RUNWAYS) {
     const ap = AIRPORT_RUNWAYS[key];
     if (Math.abs(ap.arpLat - CONFIG.CENTER_LAT) < 0.05 && Math.abs(ap.arpLon - CONFIG.CENTER_LON) < 0.05) {
@@ -1149,8 +1650,6 @@ function getActiveAirport() {
   return null;
 }
 
-// Offset a lat/lon by a distance (meters) along a true bearing (degrees).
-// Standard geodesic destination-point formula, accurate at this scale.
 function offsetLatLon(lat, lon, distM, bearingDeg) {
   const R = 6371000;
   const brg = bearingDeg * Math.PI / 180;
@@ -1164,10 +1663,7 @@ function offsetLatLon(lat, lon, distM, bearingDeg) {
   return { lat: lat2 * 180 / Math.PI, lon: lon2 * 180 / Math.PI };
 }
 
-// Compute the two threshold points of a runway, in {distKm, brg}-from-
-// center form so they can go through the same `project()` used for planes.
 function getRunwayEndpoints(airport, runway) {
-  // centerline midpoint = ARP, shifted perpendicular by the parallel offset
   let midLat = airport.arpLat, midLon = airport.arpLon;
   if (runway.offsetM !== 0) {
     const shifted = offsetLatLon(midLat, midLon, Math.abs(runway.offsetM), runway.offsetM > 0 ? runway.offsetDir : (runway.offsetDir + 180) % 360);
@@ -1183,9 +1679,7 @@ function getRunwayEndpoints(airport, runway) {
 }
 
 /* ============================================================
-   Render: radar SVG — plane icons rotated to heading, fading
-   trails, altitude-banded color, locked-aircraft highlight,
-   runway outline overlay when centered near a known airport
+   Render: radar SVG
    ============================================================ */
 function renderRadar(flights) {
   updateTrailHistory(flights);
@@ -1230,22 +1724,21 @@ function renderRadar(flights) {
     });
   }
 
-  // Calculate dynamic stroke widths based on current zoom range
   const zoomFactor = 40 / CONFIG.RADIUS_KM;
   const riverWidth = Math.max(0.6, 2.5 * zoomFactor);
   const highwayWidth = Math.max(0.4, 1.2 * zoomFactor);
 
-  // Draw geography outlines grouped under the radar clip path
+  // Group overlays under clip path
   html += `<g clip-path="url(#radarClip)">`;
 
-  // 1. Draw Botany Bay polygon
+  // 1. Draw Botany Bay
   const botanyBayPoints = projectPath(GEOGRAPHY.botanyBay);
   if (botanyBayPoints.length > 0) {
     const pointsStr = botanyBayPoints.map(p => `${p.x},${p.y}`).join(" ");
     html += `<polygon points="${pointsStr}" fill="var(--cyan-dim)" opacity="0.08" stroke="var(--cyan-dim)" stroke-width="${riverWidth}" stroke-linejoin="round" />`;
   }
 
-  // 2. Draw Waterway lines
+  // 2. Draw Waterways
   GEOGRAPHY.waterways.forEach(path => {
     const projected = projectPath(path);
     if (projected.length > 1) {
@@ -1254,7 +1747,7 @@ function renderRadar(flights) {
     }
   });
 
-  // 3. Draw Highway lines
+  // 3. Draw Highways
   GEOGRAPHY.highways.forEach(path => {
     const projected = projectPath(path);
     if (projected.length > 1) {
@@ -1263,35 +1756,102 @@ function renderRadar(flights) {
     }
   });
 
-  // 4. Draw Sydney Airport runways unconditionally (clipped)
+  // 4. Draw Detailed Airport Geometry (terminals & taxiways) on zoom
+  if (CONFIG.RADIUS_KM <= 15) {
+    const details = AIRPORT_DETAILS["-33.94,151.18"];
+    if (details) {
+      // Taxiways
+      details.taxiways.forEach(path => {
+        const projected = projectPath(path);
+        if (projected.length > 1) {
+          const pointsStr = projected.map(p => `${p.x},${p.y}`).join(" ");
+          html += `<polyline points="${pointsStr}" fill="none" stroke="var(--slate)" stroke-width="1.2" opacity="0.4" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+      });
+      // Terminals
+      details.terminals.forEach(poly => {
+        const projected = projectPath(poly);
+        if (projected.length > 2) {
+          const pointsStr = projected.map(p => `${p.x},${p.y}`).join(" ");
+          html += `<polygon points="${pointsStr}" fill="var(--bg-raised)" stroke="var(--slate)" stroke-width="0.8" opacity="0.5" />`;
+        }
+      });
+    }
+  }
+
+  // 5. Draw Runway Outlines with Active highlights
   const sydneyAirport = AIRPORT_RUNWAYS["-33.94,151.18"];
   if (sydneyAirport) {
+    const now = Date.now();
     sydneyAirport.runways.forEach(rw => {
       const [end1, end2] = getRunwayEndpoints(sydneyAirport, rw);
       const p1 = project(end1.distKm, end1.brg);
       const p2 = project(end2.distKm, end2.brg);
-      html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#8C97A6" stroke-width="3" stroke-linecap="round" opacity="0.55" />`;
+      
+      const isEnd1Active = runwayActivity[rw.labels[0]] && (now - runwayActivity[rw.labels[0]] < 300000);
+      const isEnd2Active = runwayActivity[rw.labels[1]] && (now - runwayActivity[rw.labels[1]] < 300000);
+      const isActive = isEnd1Active || isEnd2Active;
+
+      const rwColor = isActive ? "var(--climb)" : "#8C97A6";
+      const rwWidth = isActive ? 4 : 3;
+      const rwOpacity = isActive ? 0.8 : 0.55;
+
+      html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${rwColor}" stroke-width="${rwWidth}" stroke-linecap="round" opacity="${rwOpacity}" />`;
       html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#F2C879" stroke-width="0.6" stroke-dasharray="4 4" opacity="0.5" />`;
     });
   }
+
+  // 6. Draw Landmarks
+  LANDMARKS.forEach(l => {
+    if (CONFIG.RADIUS_KM >= l.minRadius && CONFIG.RADIUS_KM <= l.maxRadius) {
+      const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, l.lat, l.lon);
+      if (distKm <= CONFIG.RADIUS_KM) {
+        const p = project(distKm, bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, l.lat, l.lon));
+        html += `<circle cx="${p.x}" cy="${p.y}" r="2.2" fill="var(--slate-bright)" opacity="0.6" />`;
+        html += `<text x="${p.x + 5}" y="${p.y + 3}" fill="var(--slate-bright)" font-family="var(--mono)" font-size="8px" opacity="0.6" style="pointer-events:none;">${l.name.toUpperCase()}</text>`;
+      }
+    }
+  });
 
   html += `</g>`;
 
   html += `<circle class="center-mark" cx="${cx}" cy="${cy}" r="4" />`;
 
-  flights.forEach(f => {
-    const hist = trailHistory.get(f.icao24);
-    if (!hist || hist.points.length < 2) return;
-    const pts = hist.points.map(p => project(p.distKm, p.brg));
-    const color = altitudeColor(f.altFt);
-    pts.forEach((pt, i) => {
-      if (i === 0) return;
-      const prev = pts[i - 1];
-      const opacity = 0.06 + (i / pts.length) * 0.28;
-      html += `<line x1="${prev.x}" y1="${prev.y}" x2="${pt.x}" y2="${pt.y}" stroke="${color}" stroke-width="1.4" opacity="${opacity.toFixed(2)}" stroke-linecap="round" />`;
+  // 7. Render Flight Trails (Visible vs persistent Hot Spots)
+  if (CONFIG.SHOW_HOTSPOTS) {
+    sessionTrails.forEach((hist, icao24) => {
+      if (hist.points.length < 2) return;
+      const pts = hist.points.map(p => {
+        const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, p.lat, p.lon);
+        const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, p.lat, p.lon);
+        return project(distKm, brg);
+      });
+      let pathD = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        pathD += ` L ${pts[i].x} ${pts[i].y}`;
+      }
+      html += `<path d="${pathD}" fill="none" stroke="var(--cyan)" stroke-width="1.2" opacity="0.08" stroke-linecap="round" stroke-linejoin="round" />`;
     });
-  });
+  } else {
+    flights.forEach(f => {
+      const hist = trailHistory.get(f.icao24);
+      if (!hist || hist.points.length < 2) return;
+      const pts = hist.points.map(p => {
+        const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, p.lat, p.lon);
+        const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, p.lat, p.lon);
+        return project(distKm, brg);
+      });
+      const color = altitudeColor(f.altFt);
+      pts.forEach((pt, i) => {
+        if (i === 0) return;
+        const prev = pts[i - 1];
+        const opacity = 0.06 + (i / pts.length) * 0.28;
+        html += `<line x1="${prev.x}" y1="${prev.y}" x2="${pt.x}" y2="${pt.y}" stroke="${color}" stroke-width="1.4" opacity="${opacity.toFixed(2)}" stroke-linecap="round" />`;
+      });
+    });
+  }
 
+  // 8. Render Airplane Icons & Labels
   flights.forEach(f => {
     const { x, y } = project(f.distKm, f.brg);
     const rot = f.track != null ? f.track : 0;
@@ -1310,37 +1870,36 @@ function renderRadar(flights) {
       html += `<circle cx="${x}" cy="${y}" r="9" fill="none" stroke="#F2C879" stroke-width="1" opacity="0.7" />`;
     }
 
-    // invisible larger hit-target so tapping is easy on iPad, even though the icon itself is small
     html += `<circle class="plane-hit" cx="${x}" cy="${y}" r="14" fill="transparent" data-id="${f.icao24}" style="cursor:pointer;" />`;
     html += `<use href="${shapeId}" x="${x}" y="${y}" fill="${color}"
       transform="rotate(${rot} ${x} ${y})" stroke="${strokeColor}" stroke-width="${strokeWidth}" style="pointer-events:none;" />`;
     
-    // Draw airline logo stacked above the callsign label on the radar if available
+    // Render logo on radar if loaded
     const logoUrl = airlineLogoUrl(f.airlineIcao);
+    const labelY = logoUrl ? y + 8 : y + 3;
+    
     if (logoUrl) {
       html += `<image href="${logoUrl}" x="${x + 8}" y="${y - 10}" width="16" height="10" preserveAspectRatio="xMidYMid meet" onerror="this.style.display='none';" style="pointer-events:none;" />`;
-      html += `<text class="plane-label ${isLocked ? "locked" : ""}" x="${x + 8}" y="${y + 8}" style="pointer-events:none;">${f.callsign}</text>`;
-    } else {
-      html += `<text class="plane-label ${isLocked ? "locked" : ""}" x="${x + 8}" y="${y + 3}" style="pointer-events:none;">${f.callsign}</text>`;
     }
+    
+    html += `<text class="plane-label ${isLocked ? "locked" : ""}" x="${x + 8}" y="${labelY}" style="pointer-events:none;">${f.callsign}</text>`;
   });
 
   svg.innerHTML = html;
   document.getElementById("radiusLabel").textContent = `RADIUS — ${fmtDist(CONFIG.RADIUS_KM)}`;
 
-  // wire up click-to-select on every plane hit-target now that the SVG is in the DOM
   svg.querySelectorAll(".plane-hit").forEach(el => {
     el.addEventListener("click", () => selectAircraft(el.getAttribute("data-id")));
   });
 
   const sweepEl = document.getElementById("sweepGroup");
   sweepEl.style.animation = "none";
-  void sweepEl.offsetWidth; // force reflow so the animation restarts cleanly
+  void sweepEl.offsetWidth; 
   sweepEl.style.animation = `sweep ${CONFIG.SWEEP_SECONDS}s linear infinite`;
 }
 
 /* ============================================================
-   Location picker — presets + custom lat/lon, persisted locally
+   Location picker
    ============================================================ */
 function saveLocation(lat, lon, name) {
   try { localStorage.setItem("flightwall_location", JSON.stringify({ lat, lon, name })); } catch (e) {}
@@ -1399,11 +1958,40 @@ function initLocationPicker() {
     document.getElementById("customLon").value = "";
   });
 
+  // GPS Location Button
+  const gpsBtn = document.createElement("button");
+  gpsBtn.id = "gpsBtn";
+  gpsBtn.style.cssText = "width: 100%; background: rgba(95,212,212,0.06); border: 1px solid var(--cyan-dim); color: var(--cyan); font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; padding: 8px; border-radius: 3px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;";
+  gpsBtn.innerHTML = "<span>⊙</span> USE DEVICE LOCATION";
+  gpsBtn.addEventListener("click", () => {
+    if (navigator.geolocation) {
+      gpsBtn.innerHTML = "<span>⊙</span> ACQUIRING GPS...";
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          setLocation(lat, lon, "My Location");
+          gpsBtn.innerHTML = "<span>⊙</span> USE DEVICE LOCATION";
+        },
+        (err) => {
+          alert("Error getting location: " + err.message);
+          gpsBtn.innerHTML = "<span>⊙</span> USE DEVICE LOCATION";
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  });
+
+  const panel = document.getElementById("locPanel");
+  panel.insertBefore(gpsBtn, panel.firstChild);
+
   renderLocationPanel();
 }
 
 /* ============================================================
-   Radius picker — tap to switch range, re-fetches immediately
+   Radius picker
    ============================================================ */
 let activeTimer = null;
 let forceRefresh = false;
@@ -1428,7 +2016,7 @@ function renderRadiusPicker() {
 }
 
 /* ============================================================
-   Unit switcher (metric / imperial)
+   Unit switcher
    ============================================================ */
 function renderUnitPicker() {
   const wrap = document.getElementById("unitGroup");
@@ -1443,7 +2031,6 @@ function renderUnitPicker() {
       try { localStorage.setItem("flightwall_units", opt.key); } catch (e) {}
       renderUnitPicker();
       renderRadiusPicker();
-      // re-render immediately with cached data so units update without waiting for next poll
       if (lastGoodData) {
         const flights = parseStates(lastGoodData);
         renderBoard(flights);
@@ -1456,7 +2043,7 @@ function renderUnitPicker() {
 }
 
 /* ============================================================
-   Altitude (ground traffic) filter toggle
+   Altitude filter toggle
    ============================================================ */
 function initAltFilter() {
   const btn = document.getElementById("altFilterBtn");
@@ -1475,7 +2062,52 @@ function initAltFilter() {
 }
 
 /* ============================================================
-   Track-lock input wiring
+   Screenspace Layout Toggle
+   ============================================================ */
+function initLayoutToggle() {
+  const btn = document.getElementById("layoutToggleBtn");
+  btn.classList.toggle("active", CONFIG.RADAR_ONLY);
+  btn.textContent = CONFIG.RADAR_ONLY ? "SPLIT VIEW" : "RADAR ONLY";
+  
+  btn.addEventListener("click", () => {
+    CONFIG.RADAR_ONLY = !CONFIG.RADAR_ONLY;
+    try { localStorage.setItem("flightwall_radar_only", String(CONFIG.RADAR_ONLY)); } catch (e) {}
+    btn.classList.toggle("active", CONFIG.RADAR_ONLY);
+    btn.textContent = CONFIG.RADAR_ONLY ? "SPLIT VIEW" : "RADAR ONLY";
+    
+    document.getElementById("board-wrap").style.display = CONFIG.RADAR_ONLY ? "none" : "flex";
+    document.getElementById("radar-wrap").style.flex = CONFIG.RADAR_ONLY ? "1 0 100%" : "0 0 42%";
+    
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderRadar(flights);
+    }
+  });
+}
+
+/* ============================================================
+   Hot Spots toggle
+   ============================================================ */
+function initHotSpots() {
+  const btn = document.getElementById("hotSpotsBtn");
+  btn.classList.toggle("active", CONFIG.SHOW_HOTSPOTS);
+  btn.textContent = CONFIG.SHOW_HOTSPOTS ? "HOT SPOTS: ON" : "HOT SPOTS: OFF";
+  
+  btn.addEventListener("click", () => {
+    CONFIG.SHOW_HOTSPOTS = !CONFIG.SHOW_HOTSPOTS;
+    try { localStorage.setItem("flightwall_show_hotspots", String(CONFIG.SHOW_HOTSPOTS)); } catch (e) {}
+    btn.classList.toggle("active", CONFIG.SHOW_HOTSPOTS);
+    btn.textContent = CONFIG.SHOW_HOTSPOTS ? "HOT SPOTS: ON" : "HOT SPOTS: OFF";
+    
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderRadar(flights);
+    }
+  });
+}
+
+/* ============================================================
+   Track-lock input
    ============================================================ */
 function initTrackPicker() {
   const input = document.getElementById("trackInput");
@@ -1530,9 +2162,7 @@ function fmtTime(d) {
 }
 
 /* ============================================================
-   Main loop — refresh interval is locked to the radar sweep
-   duration, so the radar always completes one clean rotation
-   per data refresh (visually synced, not just timed similarly).
+   Main loop
    ============================================================ */
 async function tick() {
   if (checkProtocol()) return;
@@ -1560,11 +2190,22 @@ renderRadiusPicker();
 renderUnitPicker();
 initLocationPicker();
 initAltFilter();
+initLayoutToggle();
+initHotSpots();
 initTrackPicker();
 tick();
 
 // Prevent iOS Safari pull-to-refresh / bounce so it feels app-like
-document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+document.body.addEventListener('touchmove', function(e) {
+  let target = e.target;
+  while (target) {
+    if (target.id === 'board') {
+      return;
+    }
+    target = target.parentElement;
+  }
+  e.preventDefault();
+}, { passive: false });
 </script>
 </body>
 </html>
