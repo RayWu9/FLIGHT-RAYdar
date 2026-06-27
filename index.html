@@ -246,6 +246,7 @@
     flex: 1;
     display: flex;
     min-height: 0;
+    position: relative;
   }
 
   /* ===== RADAR / MAP ===== */
@@ -692,24 +693,19 @@
 <svg style="display: none;">
   <defs>
     <!-- Standard Commercial Jet -->
-    <path id="plane_jet" d="M 0 -10 C 0.8 -10 1.2 -7 1.2 -3 L 10 3 C 10.5 3.3 10.5 3.8 9.5 3.8 L 1.2 1.5 L 1.2 7 L 3.5 8.5 C 4 8.8 4 9.2 3 9.2 L 0 8.5 L -3 9.2 C -4 9.2 -4 8.8 -3.5 8.5 L -1.2 7 L -1.2 1.5 L -9.5 3.8 C -10.5 3.8 -10.5 3.3 -10 3 L -1.2 -3 C -1.2 -7 -0.8 -10 0 -10 Z" />
+    <path id="plane_jet" d="M 0 -14.5 C 1.2 -14.5 2 -13.5 2 -11.5 L 2 -3 L 13.5 4.5 C 14.5 5.2 14.5 5.8 13.5 6 L 2 3 L 2 10 L 5 12.5 C 5.5 12.9 5.5 13.2 5 13.5 L 0 12 L -5 13.5 C -5.5 13.2 -5.5 12.9 -5 12.5 L -2 10 L -2 3 L -13.5 6 C -14.5 5.8 -14.5 5.2 -13.5 4.5 L -2 -3 L -2 -11.5 C -2 -13.5 -1.2 -14.5 0 -14.5 Z" />
     
     <!-- Widebody / Heavy Jet -->
-    <path id="plane_widebody" d="M 0 -11 C 1.2 -11 1.8 -8 1.8 -4 L 12.5 3 C 13.2 3.3 13.2 3.9 12 3.9 L 1.8 1.8 L 1.8 7.5 L 4.5 9.2 C 5.1 9.5 5 9.8 3.8 9.8 L 0 9 L -3.8 9.8 C -5 9.8 -5.1 9.5 -4.5 9.2 L -1.8 7.5 L -1.8 1.8 L -12 3.9 C -13.2 3.9 -13.2 3.3 -12.5 3 L -1.8 -4 C -1.8 -8 -1.2 -11 0 -11 Z" />
-    <!-- Standard Jet -->
-    <path id="plane_jet" d="M0,-8.7 C0.6,-8.7 1,-8.2 1,-7.5 L1,-2 L9,2 L9,3.5 L1,1.5 L1,6 L3.5,8 L3.5,9 L0,8.2 L-3.5,9 L-3.5,8 L-1,6 L-1,1.5 L-9,3.5 L-9,2 L-1,-2 L-1,-7.5 C-1,-8.2 -0.6,-8.7 0,-8.7 Z" />
+    <path id="plane_widebody" d="M 0 -17 C 1.5 -17 2.5 -15 2.5 -12 L 2.5 -4 L 17 6 C 18.5 7 18.5 7.5 17 8 L 2.5 3.5 L 2.5 12 L 6.5 15.5 C 7.5 16 7.5 16.5 6.5 17 L 0 15 L -6.5 17 C -7.5 16.5 -7.5 16 -6.5 15.5 L -2.5 12 L -2.5 3.5 L -17 8 C -18.5 7.5 -18.5 7 -17 6 L -2.5 -4 L -2.5 -12 C -2.5 -15 -1.5 -17 0 -17 Z" />
     
-    <!-- Widebody -->
-    <path id="plane_widebody" d="M0,-11 C1,-11 1.6,-10 1.6,-8.5 L1.6,-2 L11,4 L11,5.5 L1.6,2.5 L1.6,8 L4,10 L4,11 L0,10.2 L-4,11 L-4,10 L-1.6,8 L-1.6,2.5 L-11,5.5 L-11,4 L-1.6,-2 L-1.6,-8.5 C-1.6,-10 -1,-11 0,-11 Z" />
-    
-    <!-- A380 -->
-    <path id="plane_a380" d="M0,-12 C1.2,-12 1.8,-11 1.8,-9 L1.8,-3 L11,4 L11,5.5 L1.8,3 L1.8,9 L4.5,11.5 L4.5,12.5 L0,11.5 L-4.5,12.5 L-4.5,11.5 L-1.8,9 L-1.8,3 L-11,5.5 L-11,4 L-1.8,-3 L-1.8,-9 C-1.8,-11 -1.2,-12 0,-12 Z" />
+    <!-- A380 Superjumbo -->
+    <path id="plane_a380" d="M 0 -18 C 2 -18 3 -16 3 -12 L 3 -4 L 20 7 C 22 8 22 9 20 9.5 L 3 4 L 3 13 L 8 17 C 9 18 9 18.5 8 19 L 0 17 L -8 19 C -9 18.5 -9 18 -8 17 L -3 13 L -3 4 L -20 9.5 C -22 9 -22 8 -20 7 L -3 -4 L -3 -12 C -3 -16 -2 -18 0 -18 Z" />
     
     <!-- Turboprop -->
-    <path id="plane_turboprop" d="M0,-7 C0.4,-7 0.8,-6.6 0.8,-6 L0.8,-2 L9,-2 L9,-1 L0.8,0.5 L0.8,5.5 L2.5,7 L2.5,7.5 L0,7 L-2.5,7.5 L-2.5,7 L-0.8,5.5 L-0.8,0.5 L-9,-1 L-9,-2 L-0.8,-2 L-0.8,-6 C-0.8,-6.6 -0.4,-7 0,-7 Z" />
+    <path id="plane_turboprop" d="M 0 -12 C 1 -12 1.5 -11 1.5 -9 L 1.5 -2 L 11 -2 L 11 0 L 1.5 1.5 L 1.5 9 L 4 11 L 4 12 L 0 11 L -4 12 L -4 11 L -1.5 9 L -1.5 1.5 L -11 0 L -11 -2 L -1.5 -2 L -1.5 -9 C -1.5 -11 -1 -12 0 -12 Z" />
     
-    <!-- Light/Piston -->
-    <path id="plane_light" d="M0,-5.5 C0.3,-5.5 0.5,-5.2 0.5,-4.5 L0.5,-1 L6,-1 L6,0 L0.5,1 L0.5,4 L2,5 L2,5.5 L0,5 L-2,5.5 L-2,5 L-0.5,4 L-0.5,1 L-6,0 L-6,-1 L-0.5,-1 L-0.5,-4.5 C-0.5,-5.2 -0.3,-5.5 0,-5.5 Z" />
+    <!-- Light General Aviation -->
+    <path id="plane_light" d="M 0 -8 C 0.8 -8 1.2 -7 1.2 -5 L 1.2 -1 L 8 -1 L 8 0 L 1.2 1.5 L 1.2 6 L 3 7 L 3 7.8 L 0 7 L -3 7.8 L -3 7 L -1.2 6 L -1.2 1.5 L -8 0 L -8 -1 L -1.2 -1 L -1.2 -5 C -1.2 -7 -0.8 -8 0 -8 Z" />
     
     <!-- Helicopter -->
     <path id="plane_helicopter" d="M 0 -6 C 1.2 -6 1.8 -4 1.8 1 C 1.8 3 0.8 5 0.5 8 L -0.5 8 C -0.8 5 -1.8 3 -1.8 1 C -1.8 -4 -1.2 -6 0 -6 M 0 -8 L 0 6 M -7 -1 L 7 -1 M -1.5 7 L 1.5 7 M 1 7 L 1 5.5" />
@@ -1336,8 +1332,22 @@ const AIRPORT_RUNWAYS = {
 })();
 
 /* ============================================================
-   Geometry helpers
+   Geometry helpers & Navigation Data
    ============================================================ */
+const YSSY_PROCEDURES = [
+  // SOUTH OPS (Runways 16L / 16R)
+  { ops: "SOUTH", type: "ARR", points: [{lat:-33.456, lon:150.816}, {lat:-33.65, lon:151.10}, {lat:-33.722, lon:151.120}, {lat:-33.85, lon:151.16}, {lat:-33.94, lon:151.177}] },
+  { ops: "SOUTH", type: "ARR", points: [{lat:-33.921, lon:151.579}, {lat:-33.85, lon:151.35}, {lat:-33.85, lon:151.18}, {lat:-33.94, lon:151.177}] },
+  { ops: "SOUTH", type: "DEP", points: [{lat:-33.94, lon:151.177}, {lat:-34.05, lon:151.18}, {lat:-34.15, lon:151.20}, {lat:-34.35, lon:151.25}] },
+  { ops: "SOUTH", type: "DEP", points: [{lat:-33.94, lon:151.177}, {lat:-34.05, lon:151.15}, {lat:-34.135, lon:150.916}, {lat:-34.25, lon:150.70}] },
+  
+  // NORTH OPS (Runways 34L / 34R)
+  { ops: "NORTH", type: "ARR", points: [{lat:-34.453, lon:151.057}, {lat:-34.20, lon:151.10}, {lat:-34.10, lon:151.14}, {lat:-34.05, lon:151.17}, {lat:-33.94, lon:151.177}] },
+  { ops: "NORTH", type: "ARR", points: [{lat:-33.921, lon:151.579}, {lat:-34.05, lon:151.35}, {lat:-34.05, lon:151.18}, {lat:-33.94, lon:151.177}] },
+  { ops: "NORTH", type: "DEP", points: [{lat:-33.94, lon:151.177}, {lat:-33.85, lon:151.18}, {lat:-33.70, lon:151.25}, {lat:-33.50, lon:151.30}] },
+  { ops: "NORTH", type: "DEP", points: [{lat:-33.94, lon:151.177}, {lat:-33.85, lon:151.10}, {lat:-33.75, lon:150.90}, {lat:-33.60, lon:150.78}] }
+];
+
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -2180,13 +2190,24 @@ function renderRadar(flights) {
       <circle cx="${cx}" cy="${cy}" r="${maxR}" />
     </clipPath>
   </defs>`;
+  const zoom = Math.max(2, Math.min(18, Math.round(15 - Math.log2(CONFIG.RADIUS_KM))));
+  const latRadCenter = CONFIG.CENTER_LAT * Math.PI / 180;
+  const n = Math.pow(2, zoom);
+  const tileWidthKm = (40075.016 / n) * Math.cos(latRadCenter);
+  const tilePixels = tileWidthKm * (maxR / CONFIG.RADIUS_KM);
+  
+  const cxPoint = (CONFIG.CENTER_LON + 180) / 360 * n;
+  const cyPoint = (1 - Math.log(Math.tan(latRadCenter) + 1 / Math.cos(latRadCenter)) / Math.PI) / 2 * n;
 
   function getPoint(lat, lon) {
-    const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
-    const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
-    const r = (distKm / CONFIG.RADIUS_KM) * maxR;
-    const rad = (brg - 90) * Math.PI / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+    const latRad = lat * Math.PI / 180;
+    const px = (lon + 180) / 360 * n;
+    const py = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+    
+    const dx = (px - cxPoint) * tilePixels;
+    const dy = (py - cyPoint) * tilePixels;
+    
+    return { x: cx + dx, y: cy + dy };
   }
 
   function project(distKm, brg) {
@@ -2292,23 +2313,47 @@ function renderRadar(flights) {
 
   html += `<circle class="center-mark" cx="${cx}" cy="${cy}" r="4" />`;
 
-  // 7) Extended Runway Centerlines if Hot Spots are ON
+  // 7) Dynamic Hot Spots / Runways
   if (CONFIG.SHOW_HOTSPOTS) {
-    const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
+    const apt = AIRPORT_RUNWAYS[`${CONFIG.CENTER_LAT.toFixed(2)},${CONFIG.CENTER_LON.toFixed(2)}`];
     if (apt) {
+      // Extended Runways
       apt.runways.forEach(rw => {
-        // Find center of runway offset
         const centerPt = latLonFromBearing(apt.arpLat, apt.arpLon, rw.offsetDir, rw.offsetM / 1000);
-        
-        // Draw 30km extended centerline in BOTH directions
         const p1 = latLonFromBearing(centerPt.lat, centerPt.lon, rw.bearing, 30);
         const p2 = latLonFromBearing(centerPt.lat, centerPt.lon, (rw.bearing + 180) % 360, 30);
-        
         const pt1 = getPoint(p1.lat, p1.lon);
         const pt2 = getPoint(p2.lat, p2.lon);
-        
         html += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" 
-                       stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.3" stroke-linecap="round" />`;
+                       stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.25" stroke-linecap="round" />`;
+      });
+      
+      // Determine active runway usage based on active flights
+      let activeOps = "SOUTH"; // default
+      let headings = [];
+      flights.forEach(f => {
+        if (f.alt < 5000 && haversineKm(f.lat, f.lon, apt.arpLat, apt.arpLon) < 20 && f.vrate !== 0) {
+          headings.push(f.track);
+        }
+      });
+      if (headings.length > 0) {
+        let avgHdg = headings.reduce((a,b)=>a+b, 0) / headings.length;
+        if (avgHdg > 90 && avgHdg < 250) activeOps = "SOUTH"; // 16L/R
+        else activeOps = "NORTH"; // 34L/R
+      }
+      
+      // Draw SIDs and STARs
+      YSSY_PROCEDURES.forEach(proc => {
+        if (proc.ops !== activeOps) return;
+        if (proc.points.length < 2) return;
+        let pathD = "";
+        proc.points.forEach((c, idx) => {
+          const pt = getPoint(c.lat, c.lon);
+          if (idx === 0) pathD += `M ${pt.x} ${pt.y}`;
+          else pathD += ` L ${pt.x} ${pt.y}`;
+        });
+        const color = proc.type === "ARR" ? "var(--cyan)" : "var(--amber)";
+        html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round" />`;
       });
     }
   }
