@@ -75,7 +75,7 @@
     gap: 8px;
     flex-wrap: nowrap;
     flex: 1;
-    justify-content: flex-end;
+    justify-content: flex-start;
     overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
@@ -887,7 +887,7 @@
   <main>
     <div id="radar-wrap">
       <div id="radar-svg-wrap">
-        <svg id="radar-svg" viewBox="0 0 400 400"></svg>
+        <svg id="radar-svg" viewBox="0 0 400 400" preserveAspectRatio="xMinYMid meet"></svg>
         <div class="radius-label" id="radiusLabel">RADIUS — KM</div>
         <div id="nearest-blob">
           <button class="nb-dismiss" id="nbDismiss" title="Close panel">✕</button>
