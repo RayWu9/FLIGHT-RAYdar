@@ -571,6 +571,66 @@
     .board-head, .row { grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr; }
     .board-head div:nth-child(3), .row .actype { display: none; }
   }
+
+  /* ===== FOCUS MODE — Bottom Sheet ===== */
+  .nb-dismiss {
+    display: none;
+    position: absolute;
+    top: 14px; right: 14px;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--slate);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    line-height: 1;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .nb-dismiss:hover { color: var(--amber); border-color: var(--amber-dim); }
+  .nb-dismiss:active { opacity: 0.6; }
+  #nearest-blob.nb-focus {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: none;
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--cyan-dim);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 4px 24px max(env(safe-area-inset-bottom), 24px);
+    box-shadow: 0 -16px 52px rgba(0,0,0,0.8);
+    z-index: 100;
+    max-height: 62vh;
+    overflow-y: auto;
+    animation: slideUp 0.32s cubic-bezier(0.34, 1.15, 0.64, 1);
+  }
+  #nearest-blob.nb-focus::before {
+    content: '';
+    display: block;
+    width: 38px;
+    height: 4px;
+    background: var(--slate);
+    border-radius: 2px;
+    margin: 12px auto 16px;
+    opacity: 0.4;
+  }
+  #nearest-blob.nb-focus .nb-dismiss { display: block; }
+  #nearest-blob.nb-focus .nb-callsign { font-size: 26px; }
+  #nearest-blob.nb-focus .nb-iata { font-size: 13px; }
+  #nearest-blob.nb-focus .nb-logo { height: 28px; max-width: 80px; }
+  #nearest-blob.nb-focus .nb-label { font-size: 9px; }
+  @keyframes slideUp {
+    from { transform: translateY(60%); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+  /* Radar-only mode: push radar bottom so bottom sheet doesn't fully cover it */
+  body.radar-only-mode #radar-svg-wrap { padding-bottom: 0; }
 </style>
 </head>
 <body>
@@ -620,6 +680,9 @@
       <div class="pill-group" id="hotSpotsGroup">
         <button class="pill-btn" id="hotSpotsBtn">HOT SPOTS</button>
       </div>
+      <div class="pill-group" id="sydCloseupGroup">
+        <button class="pill-btn" id="sydCloseupBtn">SYD ✈ 3KM</button>
+      </div>
       <div class="pill-group" id="altFilterGroup">
         <button class="pill-btn active" id="altFilterBtn">HIDE GROUND</button>
       </div>
@@ -657,6 +720,7 @@
         <svg id="radar-svg" viewBox="0 0 400 400"></svg>
         <div class="radius-label" id="radiusLabel">RADIUS — KM</div>
         <div id="nearest-blob">
+          <button class="nb-dismiss" id="nbDismiss" title="Close panel">✕</button>
           <div class="nb-label" id="nbLabel">NEAREST AIRCRAFT</div>
           <div class="nb-header">
             <div class="nb-callsign-wrap">
@@ -779,7 +843,8 @@ const CONFIG = {
 // Quick-pick presets shown in the location dropdown
 const LOCATION_PRESETS = [
   { code: "A", name: "Newington",       lat: -33.8365730, lon: 151.0555295 },
-  { code: "B", name: "Sydney Airport",  lat: -33.9399,    lon: 151.1753 }
+  { code: "B", name: "Sydney Airport",  lat: -33.9399,    lon: 151.1753 },
+  { code: "C", name: "SYD Close-up",   lat: -33.946098,  lon: 151.177002, radius: 3 }
 ];
 
 // In-memory caches and trackers
@@ -978,13 +1043,21 @@ const AIRPORT_DETAILS = {
 };
 
 const LANDMARKS = [
-  { name: "Sydney Airport", lat: -33.946, lon: 151.177, minRadius: 10, maxRadius: 150 },
-  { name: "Newington", lat: -33.837, lon: 151.056, minRadius: 3, maxRadius: 40 },
-  { name: "Sydney CBD", lat: -33.868, lon: 151.209, minRadius: 10, maxRadius: 80 },
-  { name: "Bankstown", lat: -33.924, lon: 151.052, minRadius: 10, maxRadius: 80 },
-  { name: "Richmond", lat: -33.600, lon: 150.780, minRadius: 40, maxRadius: 150 },
-  { name: "Wollongong", lat: -34.425, lon: 150.893, minRadius: 80, maxRadius: 450 },
-  { name: "Newcastle", lat: -32.927, lon: 151.776, minRadius: 80, maxRadius: 450 }
+  { name: "Sydney Airport", lat: -33.946, lon: 151.177, minRadius: 5,  maxRadius: 150 },
+  { name: "Newington",      lat: -33.837, lon: 151.056, minRadius: 3,  maxRadius: 40  },
+  { name: "Bankstown Apt",  lat: -33.924, lon: 150.988, minRadius: 5,  maxRadius: 40  },
+  { name: "Sydney CBD",     lat: -33.868, lon: 151.209, minRadius: 10, maxRadius: 150 },
+  { name: "Parramatta",     lat: -33.815, lon: 151.003, minRadius: 20, maxRadius: 150 },
+  { name: "Liverpool",      lat: -33.920, lon: 150.924, minRadius: 20, maxRadius: 80  },
+  { name: "Sutherland",     lat: -34.032, lon: 151.057, minRadius: 20, maxRadius: 80  },
+  { name: "Hornsby",        lat: -33.704, lon: 151.099, minRadius: 20, maxRadius: 80  },
+  { name: "Manly",          lat: -33.797, lon: 151.285, minRadius: 20, maxRadius: 80  },
+  { name: "Penrith",        lat: -33.751, lon: 150.694, minRadius: 40, maxRadius: 150 },
+  { name: "Campbelltown",   lat: -34.066, lon: 150.814, minRadius: 40, maxRadius: 150 },
+  { name: "Richmond",       lat: -33.600, lon: 150.780, minRadius: 40, maxRadius: 150 },
+  { name: "Gosford",        lat: -33.427, lon: 151.342, minRadius: 80, maxRadius: 450 },
+  { name: "Wollongong",     lat: -34.425, lon: 150.893, minRadius: 80, maxRadius: 450 },
+  { name: "Newcastle",      lat: -32.927, lon: 151.776, minRadius: 80, maxRadius: 450 }
 ];
 
 const AIRPORT_RUNWAYS = {
@@ -1539,6 +1612,8 @@ function renderDetailPanel(flights) {
   if (!f) f = flights[0]; 
 
   blob.classList.add("show");
+  // Focus mode: full-width bottom sheet when in radar-only layout
+  blob.classList.toggle("nb-focus", CONFIG.RADAR_ONLY);
   document.getElementById("nbLabel").textContent = showingSelected ? "SELECTED AIRCRAFT" : "NEAREST AIRCRAFT";
 
   const logoUrl = airlineLogoUrl(f.airlineIcao);
@@ -1926,8 +2001,17 @@ function renderLocationPanel() {
     const btn = document.createElement("button");
     const isActive = Math.abs(p.lat - CONFIG.CENTER_LAT) < 0.0005 && Math.abs(p.lon - CONFIG.CENTER_LON) < 0.0005;
     btn.className = "preset" + (isActive ? " active" : "");
-    btn.innerHTML = `<span><span class="code">${p.code}</span>${p.name}</span>`;
-    btn.addEventListener("click", () => setLocation(p.lat, p.lon, p.name));
+    const radioBadge = p.radius ? ` <span style="font-size:8px;color:var(--cyan-dim);margin-left:4px;">${p.radius}KM</span>` : "";
+    btn.innerHTML = `<span><span class="code">${p.code}</span>${p.name}${radioBadge}</span>`;
+    btn.addEventListener("click", () => {
+      if (p.radius) {
+        CONFIG.RADIUS_KM = p.radius;
+        trailHistory.clear();
+        sessionTrails.clear();
+        renderRadiusPicker();
+      }
+      setLocation(p.lat, p.lon, p.name);
+    });
     panel.insertBefore(btn, customBlock);
   });
 }
@@ -2006,6 +2090,8 @@ function renderRadiusPicker() {
     btn.addEventListener("click", () => {
       if (km === CONFIG.RADIUS_KM) return;
       CONFIG.RADIUS_KM = km;
+      trailHistory.clear();
+      sessionTrails.clear();
       renderRadiusPicker();
       if (activeTimer) clearTimeout(activeTimer);
       forceRefresh = true;
@@ -2077,10 +2163,12 @@ function initLayoutToggle() {
     
     document.getElementById("board-wrap").style.display = CONFIG.RADAR_ONLY ? "none" : "flex";
     document.getElementById("radar-wrap").style.flex = CONFIG.RADAR_ONLY ? "1 0 100%" : "0 0 42%";
+    document.body.classList.toggle("radar-only-mode", CONFIG.RADAR_ONLY);
     
     if (lastGoodData) {
       const flights = parseStates(lastGoodData);
       renderRadar(flights);
+      renderDetailPanel(flights);
     }
   });
 }
@@ -2098,9 +2186,42 @@ function initHotSpots() {
     try { localStorage.setItem("flightwall_show_hotspots", String(CONFIG.SHOW_HOTSPOTS)); } catch (e) {}
     btn.classList.toggle("active", CONFIG.SHOW_HOTSPOTS);
     btn.textContent = CONFIG.SHOW_HOTSPOTS ? "HOT SPOTS: ON" : "HOT SPOTS: OFF";
-    
+    // Clear the dormant trail set for a clean visual transition
+    if (CONFIG.SHOW_HOTSPOTS) trailHistory.clear(); else sessionTrails.clear();
     if (lastGoodData) {
       const flights = parseStates(lastGoodData);
+      renderRadar(flights);
+    }
+  });
+}
+
+/* ============================================================
+   SYD Close-up shortcut button
+   ============================================================ */
+function initSydCloseup() {
+  const btn = document.getElementById("sydCloseupBtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    CONFIG.RADIUS_KM = 3;
+    trailHistory.clear();
+    sessionTrails.clear();
+    renderRadiusPicker();
+    setLocation(-33.946098, 151.177002, "Sydney Airport");
+  });
+}
+
+/* ============================================================
+   Focus panel dismiss button
+   ============================================================ */
+function initDismissPanel() {
+  const btn = document.getElementById("nbDismiss");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    selectedId = null;
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderDetailPanel(flights);
+      renderBoard(flights);
       renderRadar(flights);
     }
   });
@@ -2193,6 +2314,8 @@ initAltFilter();
 initLayoutToggle();
 initHotSpots();
 initTrackPicker();
+initSydCloseup();
+initDismissPanel();
 tick();
 
 // Prevent iOS Safari pull-to-refresh / bounce so it feels app-like
