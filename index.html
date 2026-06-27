@@ -73,10 +73,15 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex: 1;
     justify-content: flex-end;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    padding-bottom: 4px;
   }
+  .header-controls::-webkit-scrollbar { display: none; }
   .status-line {
     font-family: var(--mono);
     font-size: 10px;
@@ -161,6 +166,7 @@
     border-radius: 6px;
     padding: 10px;
     width: 260px;
+    max-width: calc(100vw - 20px);
     box-shadow: 0 12px 28px rgba(0,0,0,0.5);
   }
   .loc-panel.open { display: block; }
@@ -286,15 +292,15 @@
   #nearest-blob {
     position: absolute;
     top: 10px; right: 10px;
-    background: rgba(17, 22, 29, 0.9);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 14px;
+    background: rgba(11, 15, 20, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
     font-family: var(--mono);
-    width: 290px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    width: 320px;
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
     display: none;
     z-index: 50;
   }
@@ -303,19 +309,20 @@
     font-size: 8px;
     color: var(--cyan);
     letter-spacing: 0.12em;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     text-transform: uppercase;
+    opacity: 0.8;
   }
   #nearest-blob .nb-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 8px;
+    gap: 12px;
+    margin-bottom: 12px;
   }
   #nearest-blob .nb-logo {
-    height: 22px;
-    max-width: 60px;
+    height: 24px;
+    max-width: 70px;
     object-fit: contain;
     flex-shrink: 0;
   }
@@ -324,17 +331,17 @@
     flex-direction: column;
   }
   #nearest-blob .nb-callsign {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--amber);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
   }
   #nearest-blob .nb-iata {
     font-size: 11px;
     color: var(--slate-bright);
-    margin-top: -2px;
+    margin-top: 1px;
   }
-  #nearest-blob .nb-sub { font-size: 10px; color: var(--slate-bright); margin-bottom: 3px; line-height: 1.4; }
+  #nearest-blob .nb-sub { font-size: 11px; color: var(--slate-bright); margin-bottom: 4px; line-height: 1.4; }
   #nearest-blob .nb-row { display: flex; justify-content: space-between; font-size: 10px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
   #nearest-blob .nb-row .v { color: var(--cyan); }
   #nearest-blob .nb-vrate { font-size: 9.5px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 6px; }
@@ -568,8 +575,13 @@
     }
   }
   @media (max-width: 600px) {
+    header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 10px; }
+    .header-right { width: 100%; justify-content: flex-start; padding-bottom: 2px; }
     .board-head, .row { grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr; }
     .board-head div:nth-child(3), .row .actype { display: none; }
+    
+    .loc-panel { position: fixed; top: 120px !important; right: 10px; left: 10px; width: auto; max-width: none; }
+    #settingsPanel { top: 120px !important; }
   }
 
   /* ===== FOCUS MODE — Bottom Sheet ===== */
@@ -1775,7 +1787,7 @@ function getAircraftCategory(f) {
 /* ============================================================
    Airline logo lookup
    ============================================================ */
-const AIRLINE_LOGO_BASE = "https://raw.githubusercontent.com/airframesio/airline-images/main/fr24_logos";
+const AIRLINE_LOGO_BASE = "https://images.kiwi.com/airlines/64";
 
 function airlineLogoUrl(airlineIcao) {
   if (!airlineIcao) return null;
@@ -1873,7 +1885,7 @@ function updateTrailHistory(flights) {
     if (!sLastPt || Math.abs(sLastPt.lat - f.lat) > 0.0001 || Math.abs(sLastPt.lon - f.lon) > 0.0001) {
       sEntry.points.push({ lat: f.lat, lon: f.lon });
     }
-    if (sEntry.points.length > 50) sEntry.points.shift();
+    if (sEntry.points.length > 500) sEntry.points.shift();
     sEntry.lastSeen = now;
     sessionTrails.set(f.icao24, sEntry);
   });
@@ -1884,9 +1896,9 @@ function updateTrailHistory(flights) {
     }
   }
   
-  if (sessionTrails.size > 150) {
+  if (sessionTrails.size > 400) {
     const sorted = [...sessionTrails.entries()].sort((a, b) => a[1].lastSeen - b[1].lastSeen);
-    for (let i = 0; i < sorted.length - 150; i++) {
+    for (let i = 0; i < sorted.length - 400; i++) {
       sessionTrails.delete(sorted[i][0]);
     }
   }
@@ -2299,7 +2311,7 @@ function renderRadar(flights) {
       for (let i = 1; i < pts.length; i++) {
         pathD += ` L ${pts[i].x} ${pts[i].y}`;
       }
-      html += `<path d="${pathD}" fill="none" stroke="var(--cyan)" stroke-width="1.2" opacity="0.08" stroke-linecap="round" stroke-linejoin="round" />`;
+      html += `<path d="${pathD}" fill="none" stroke="var(--amber)" stroke-width="1.5" opacity="0.15" stroke-linecap="round" stroke-linejoin="round" />`;
     });
   } else {
     flights.forEach(f => {
@@ -2533,11 +2545,14 @@ function renderUnitPicker() {
    ============================================================ */
 function initAltFilter() {
   const btn = document.getElementById("altFilterBtn");
-  btn.classList.toggle("active", CONFIG.HIDE_GROUND);
+  btn.classList.toggle("active", !CONFIG.HIDE_GROUND);
+  btn.textContent = CONFIG.HIDE_GROUND ? "GROUND: HIDE" : "GROUND: SHOW";
+  
   btn.addEventListener("click", () => {
     CONFIG.HIDE_GROUND = !CONFIG.HIDE_GROUND;
     try { localStorage.setItem("flightwall_hide_ground", String(CONFIG.HIDE_GROUND)); } catch (e) {}
-    btn.classList.toggle("active", CONFIG.HIDE_GROUND);
+    btn.classList.toggle("active", !CONFIG.HIDE_GROUND);
+    btn.textContent = CONFIG.HIDE_GROUND ? "GROUND: HIDE" : "GROUND: SHOW";
     if (lastGoodData) {
       const flights = parseStates(lastGoodData);
       renderBoard(flights);
@@ -2938,30 +2953,30 @@ function renderSatTiles() {
   const zoom = Math.max(2, Math.min(18, Math.round(15 - Math.log2(CONFIG.RADIUS_KM))));
   const lat = CONFIG.CENTER_LAT, lon = CONFIG.CENTER_LON;
 
-  // Convert lat/lon to tile coordinates
+  // Convert lat/lon to exact fractional tile coordinates
+  const latRad = lat * Math.PI / 180;
   const n = Math.pow(2, zoom);
-  const xtile = Math.floor((lon + 180) / 360 * n);
-  const ytile = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
+  const xPoint = (lon + 180) / 360 * n;
+  const yPoint = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+  
+  const xtile = Math.floor(xPoint);
+  const ytile = Math.floor(yPoint);
 
   // Load center tile and surrounding tiles
   const tilesToLoad = [];
-  for (let dx = -2; dx <= 2; dx++) {
-    for (let dy = -2; dy <= 2; dy++) {
+  for (let dx = -3; dx <= 3; dx++) {
+    for (let dy = -3; dy <= 3; dy++) {
       tilesToLoad.push({ x: xtile + dx, y: ytile + dy, dx, dy });
     }
   }
 
-  // Tile pixel size on screen
-  const tileWorldSize = 360 / n; // degrees per tile
-  const kmPerDeg = 111.32 * Math.cos(lat * Math.PI / 180);
-  const tileKm = tileWorldSize * kmPerDeg;
-  const tilePixels = (tileKm / CONFIG.RADIUS_KM) * maxR;
+  // Tile pixel size on screen based on Web Mercator scale at this latitude
+  const tileWidthKm = (40075.016 / n) * Math.cos(latRad);
+  const tilePixels = tileWidthKm * (maxR / CONFIG.RADIUS_KM);
 
-  // Center offset within the center tile
-  const centerTileLon = (xtile / n) * 360 - 180;
-  const centerTileLat = Math.atan(Math.sinh(Math.PI * (1 - 2 * ytile / n))) * 180 / Math.PI;
-  const offsetXPx = ((lon - centerTileLon) / tileWorldSize) * tilePixels;
-  const offsetYPx = ((centerTileLat - lat) / (tileWorldSize * Math.cos(lat * Math.PI / 180))) * tilePixels;
+  // Offset from top-left of the center tile to the exact lat/lon point
+  const offsetXPx = (xPoint - xtile) * tilePixels;
+  const offsetYPx = (yPoint - ytile) * tilePixels;
 
   // Create circular clip
   ctx.save();
@@ -2976,9 +2991,11 @@ function renderSatTiles() {
     if (satTileCache.has(cacheKey)) {
       const img = satTileCache.get(cacheKey);
       if (img.complete && img.naturalWidth > 0) {
+        // tx, ty is the top-left coordinate of the tile
         const tx = cx + (t.dx * tilePixels) - offsetXPx;
         const ty = cy + (t.dy * tilePixels) - offsetYPx;
-        ctx.drawImage(img, tx - tilePixels / 2, ty - tilePixels / 2, tilePixels, tilePixels);
+        // overlap slightly (by 0.5px) to prevent sub-pixel grid lines
+        ctx.drawImage(img, tx - 0.5, ty - 0.5, tilePixels + 1, tilePixels + 1);
       }
     } else {
       const img = new Image();
