@@ -631,6 +631,46 @@
   }
   /* Radar-only mode: push radar bottom so bottom sheet doesn't fully cover it */
   body.radar-only-mode #radar-svg-wrap { padding-bottom: 0; }
+
+  /* Map Contrast Themes */
+  body.theme-highcontrast {
+    --bg: #000000;
+    --bg-panel: #0A0A0A;
+    --bg-raised: #121212;
+    --line: #333333;
+    --slate: #A0A0A0;
+    --slate-bright: #FFFFFF;
+    --cyan: #00FFFF;
+    --cyan-dim: #008B8B;
+  }
+  body.theme-amber {
+    --bg: #120A00;
+    --bg-panel: #1C0F00;
+    --bg-raised: #291600;
+    --line: #3D2200;
+    --slate: #9E6B30;
+    --slate-bright: #F7A84D;
+    --amber: #FFB04D;
+    --amber-dim: #C28232;
+    --cyan: #FFB04D;
+    --cyan-dim: #8F5E24;
+    --climb: #FFC475;
+    --descend: #D48928;
+  }
+  body.theme-green {
+    --bg: #000F05;
+    --bg-panel: #001A0A;
+    --bg-raised: #00260F;
+    --line: #003D18;
+    --slate: #309E52;
+    --slate-bright: #4DF77D;
+    --amber: #4DF77D;
+    --amber-dim: #248F43;
+    --cyan: #4DF77D;
+    --cyan-dim: #1E6E34;
+    --climb: #82FFA4;
+    --descend: #29B351;
+  }
 </style>
 </head>
 <body>
@@ -688,6 +728,86 @@
       </div>
       <div class="pill-group" id="unitGroup">
         <span class="glabel">UNITS</span>
+      </div>
+      <div class="settings-picker" style="position: relative;">
+        <button class="loc-btn" id="settingsBtn">
+          <span class="pin">⚙</span><span class="name">Settings & Stats</span>
+        </button>
+        <div class="loc-panel" id="settingsPanel" style="width: 320px; top: calc(100% + 8px); right: 0;">
+          <!-- Theme / Contrast Settings -->
+          <div class="loc-custom" style="margin-top: 0; padding-top: 0; border-top: none;">
+            <div class="lbl">CONTRAST & MAP THEME</div>
+            <div class="pill-group" style="margin-bottom: 12px; flex-wrap: wrap; gap: 4px;">
+              <button class="pill-btn active" id="themeMidnightBtn">MIDNIGHT</button>
+              <button class="pill-btn" id="themeContrastBtn">HIGH CONTRAST</button>
+              <button class="pill-btn" id="themeAmberBtn">AMBER CRT</button>
+              <button class="pill-btn" id="themeGreenBtn">RADAR GREEN</button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="loc-custom">
+            <div class="lbl">AIRSPACE FILTERS</div>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-family: var(--mono); font-size: 10.5px; color: var(--slate-bright);">Type:</span>
+                <select id="filterType" style="background: var(--bg); border: 1px solid var(--line); color: var(--amber); font-family: var(--mono); font-size: 11px; padding: 4px; border-radius: 3px; outline: none; width: 140px;">
+                  <option value="all">All Flights</option>
+                  <option value="domestic">Domestic Only</option>
+                  <option value="international">International Only</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-family: var(--mono); font-size: 10.5px; color: var(--slate-bright);">Sydney Route:</span>
+                <select id="filterDirection" style="background: var(--bg); border: 1px solid var(--line); color: var(--amber); font-family: var(--mono); font-size: 11px; padding: 4px; border-radius: 3px; outline: none; width: 140px;">
+                  <option value="all">All Directions</option>
+                  <option value="departures">Departures (Outbound)</option>
+                  <option value="arrivals">Arrivals (Inbound)</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-family: var(--mono); font-size: 10.5px; color: var(--slate-bright);">Manufacturer:</span>
+                <select id="filterMfg" style="background: var(--bg); border: 1px solid var(--line); color: var(--amber); font-family: var(--mono); font-size: 11px; padding: 4px; border-radius: 3px; outline: none; width: 140px;">
+                  <option value="all">All Aircraft</option>
+                  <option value="boeing">Boeing Only</option>
+                  <option value="airbus">Airbus Only</option>
+                  <option value="other">Others</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sound alert Mode -->
+          <div class="loc-custom">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span class="lbl" style="margin-bottom: 0;">NEARBY AUDIO ALERTS</span>
+              <button class="pill-btn" id="soundToggleBtn">SOUND: OFF</button>
+            </div>
+          </div>
+
+          <!-- Session Statistics -->
+          <div class="loc-custom">
+            <div class="lbl">SESSION STATISTICS</div>
+            <div class="nb-grid" style="margin-top: 4px; padding-top: 0; border-top: none;">
+              <div class="nb-grid-item">
+                <span class="lbl" style="font-size: 7.5px;">Top Speed</span>
+                <span class="val" id="statsMaxSpeed">—</span>
+              </div>
+              <div class="nb-grid-item">
+                <span class="lbl" style="font-size: 7.5px;">Max Altitude</span>
+                <span class="val" id="statsMaxAlt">—</span>
+              </div>
+              <div class="nb-grid-item">
+                <span class="lbl" style="font-size: 7.5px;">Closest Flight</span>
+                <span class="val" id="statsClosestDist">—</span>
+              </div>
+              <div class="nb-grid-item">
+                <span class="lbl" style="font-size: 7.5px;">Total Logged</span>
+                <span class="val" id="statsTotalLogged">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="loc-picker">
         <button class="loc-btn" id="locBtn">
@@ -853,6 +973,23 @@ const pendingRouteFetches = new Set();
 const sessionTrails = new Map();
 const zeroSpeedTimestamps = new Map();
 const runwayActivity = {}; // active runway tracking
+
+// Upgrades Globals
+const FILTERS = {
+  type: "all",           // "all", "domestic", "international"
+  direction: "all",      // "all", "departures", "arrivals"
+  manufacturer: "all"    // "all", "boeing", "airbus", "other"
+};
+
+let soundAlertMode = false;
+const announcedFlights = new Set();
+
+const STATS = {
+  maxSpeed: 0,
+  maxAlt: 0,
+  closestDist: Infinity,
+  uniqueFlights: new Set()
+};
 
 const ICAO_TO_IATA = {
   "QFA": "QF", "CPA": "CX", "SIA": "SQ", "ANZ": "NZ", "UAL": "UA",
@@ -1318,7 +1455,7 @@ function parseStates(raw) {
     });
   }
 
-  return parsed
+  const filtered = parsed
     .filter(f => f.distKm <= CONFIG.RADIUS_KM)
     .filter(f => {
       if (!f.onGround) return true; // flying is always shown
@@ -1338,7 +1475,91 @@ function parseStates(raw) {
 
       return false; // hide if stationary for more than 1 minute
     })
+    .filter(f => {
+      // 1. Domestic vs International filter
+      if (FILTERS.type !== "all") {
+        const cleanCallsign = f.callsign.replace(/\s+/g, "");
+        const route = routeCache.get(cleanCallsign);
+        const isDomestic = f.reg && f.reg.startsWith("VH-") && (!route || (route.origin.country === "Australia" && route.destination.country === "Australia"));
+        if (FILTERS.type === "domestic" && !isDomestic) return false;
+        if (FILTERS.type === "international" && isDomestic) return false;
+      }
+
+      // 2. Sydney Airport Outbound / Inbound Filter
+      if (FILTERS.direction !== "all") {
+        const cleanCallsign = f.callsign.replace(/\s+/g, "");
+        const route = routeCache.get(cleanCallsign);
+        if (!route || route.notFound) return false;
+        const isLeaving = route.origin.iata_code === "SYD" || route.origin.icao_code === "YSSY";
+        const isArriving = route.destination.iata_code === "SYD" || route.destination.icao_code === "YSSY";
+        if (FILTERS.direction === "departures" && !isLeaving) return false;
+        if (FILTERS.direction === "arrivals" && !isArriving) return false;
+      }
+
+      // 3. Manufacturer Filter
+      if (FILTERS.manufacturer !== "all") {
+        const desc = f.typeDesc ? f.typeDesc.toUpperCase() : "";
+        const code = f.typeCode ? f.typeCode.toUpperCase() : "";
+        const isAirbus = desc.includes("AIRBUS") || code.startsWith("A3");
+        const isBoeing = desc.includes("BOEING") || code.startsWith("B7");
+        if (FILTERS.manufacturer === "boeing" && !isBoeing) return false;
+        if (FILTERS.manufacturer === "airbus" && !isAirbus) return false;
+        if (FILTERS.manufacturer === "other" && (isBoeing || isAirbus)) return false;
+      }
+
+      return true;
+    })
     .sort((a, b) => a.distKm - b.distKm);
+
+  updateStatsAndAlerts(filtered);
+
+  return filtered;
+}
+
+function updateStatsAndAlerts(flights) {
+  flights.forEach(f => {
+    // Session Statistics
+    STATS.uniqueFlights.add(f.icao24);
+    if (f.spdKt !== null) {
+      const speedValue = Math.round(CONFIG.UNITS === "imperial" ? f.spdKt * 1.15078 : f.spdKt * 1.852);
+      if (speedValue > STATS.maxSpeed) STATS.maxSpeed = speedValue;
+    }
+    if (f.altFt !== null) {
+      const altValue = Math.round(CONFIG.UNITS === "imperial" ? f.altFt : f.altFt * 0.3048);
+      if (altValue > STATS.maxAlt) STATS.maxAlt = altValue;
+    }
+    if (f.distKm !== null && f.distKm < STATS.closestDist) {
+      STATS.closestDist = f.distKm;
+    }
+
+    // Nearby Voice Announcements
+    if (soundAlertMode && f.distKm <= 4 && !announcedFlights.has(f.callsign)) {
+      announcedFlights.add(f.callsign);
+      if ('speechSynthesis' in window) {
+        const iata = getIataFlightNumber(f.callsign);
+        const name = iata || f.callsign;
+        const speedText = f.spdKt ? `, speed ${Math.round(f.spdKt * 1.852)} kilometers per hour` : "";
+        const altText = f.altFt ? ` at ${f.altFt} feet` : "";
+        const utter = new SpeechSynthesisUtterance(`Aircraft nearby: ${name} ${altText} ${speedText}`);
+        utter.rate = 0.9;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+  });
+
+  // Periodically clean announced flights if they go far away (e.g. > 10 km)
+  announcedFlights.forEach(callsign => {
+    const flightObj = flights.find(fl => fl.callsign === callsign);
+    if (flightObj && flightObj.distKm > 10) {
+      announcedFlights.delete(callsign);
+    }
+  });
+
+  // Update Stats UI
+  document.getElementById("statsMaxSpeed").textContent = STATS.maxSpeed ? `${STATS.maxSpeed} ${CONFIG.UNITS === "imperial" ? "mph" : "km/h"}` : "—";
+  document.getElementById("statsMaxAlt").textContent = STATS.maxAlt ? `${STATS.maxAlt.toLocaleString()} ${CONFIG.UNITS === "imperial" ? "ft" : "m"}` : "—";
+  document.getElementById("statsClosestDist").textContent = STATS.closestDist !== Infinity ? `${fmtDist(STATS.closestDist)}` : "—";
+  document.getElementById("statsTotalLogged").textContent = STATS.uniqueFlights.size;
 }
 
 function headingArrow(track) {
@@ -1447,11 +1668,15 @@ function setTrackedId(id) {
 /* ============================================================
    Altitude → color band (radar icons + visual reference)
    ============================================================ */
-function altitudeColor(altFt) {
-  if (altFt == null) return "#5A6472";
-  if (altFt < 3000) return "#F2C879";
-  if (altFt < 15000) return "#E0A85F";
-  return "#5FD4D4";
+function flightColor(f) {
+  if (f.altFt == null) return "#5A6472";
+  if (f.vrate != null) {
+    if (f.vrate > 150) return "var(--climb)"; // Climbing
+    if (f.vrate < -150) return "var(--warn)"; // Descending
+  }
+  if (f.altFt < 3000) return "var(--amber)";
+  if (f.altFt < 15000) return "var(--descend)";
+  return "var(--cyan)";
 }
 
 /* ============================================================
@@ -1531,7 +1756,7 @@ function renderBoard(flights) {
       ? `<img class="airline-logo" src="${logoUrl}" alt="" onerror="${LOGO_ONERROR}">`
       : "";
     const category = getAircraftCategory(f);
-    const altColor = altitudeColor(f.altFt);
+    const altColor = flightColor(f);
     const iconRotation = f.track != null ? f.track : 0;
     const iconHtml = `<svg class="actype-icon" viewBox="-12 -12 24 24" style="width: 14px; height: 14px; fill: ${altColor}; stroke: var(--bg); stroke-width: 0.5; transform: rotate(${iconRotation}deg);"><use href="#plane_${category}"></use></svg>`;
     
@@ -1766,6 +1991,8 @@ function renderRadar(flights) {
   [1, 2, 3, 4].forEach(i => {
     const r = (maxR / 4) * i;
     html += `<circle class="ring" cx="${cx}" cy="${cy}" r="${r}" />`;
+    const labelText = fmtDist((CONFIG.RADIUS_KM / 4) * i);
+    html += `<text x="${cx + 4}" y="${cy - r + 9}" fill="var(--cyan-dim)" font-family="var(--mono)" font-size="7.5px" opacity="0.6" style="pointer-events:none;">${labelText}</text>`;
   });
   html += `<line class="crosshair" x1="${cx}" y1="${cy-maxR}" x2="${cx}" y2="${cy+maxR}" />`;
   html += `<line class="crosshair" x1="${cx-maxR}" y1="${cy}" x2="${cx+maxR}" y2="${cy}" />`;
@@ -1916,7 +2143,7 @@ function renderRadar(flights) {
         const brg = bearingFromCenter(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, p.lat, p.lon);
         return project(distKm, brg);
       });
-      const color = altitudeColor(f.altFt);
+      const color = flightColor(f);
       pts.forEach((pt, i) => {
         if (i === 0) return;
         const prev = pts[i - 1];
@@ -1930,7 +2157,7 @@ function renderRadar(flights) {
   flights.forEach(f => {
     const { x, y } = project(f.distKm, f.brg);
     const rot = f.track != null ? f.track : 0;
-    const color = altitudeColor(f.altFt);
+    const color = flightColor(f);
     const isLocked = trackedId && (f.callsign.toUpperCase() === trackedId || f.icao24 === trackedId);
     const isSelected = selectedId === f.icao24;
     const strokeColor = isLocked ? "#5FD4D4" : "#0B0F14";
@@ -2006,8 +2233,6 @@ function renderLocationPanel() {
     btn.addEventListener("click", () => {
       if (p.radius) {
         CONFIG.RADIUS_KM = p.radius;
-        trailHistory.clear();
-        sessionTrails.clear();
         renderRadiusPicker();
       }
       setLocation(p.lat, p.lon, p.name);
@@ -2090,8 +2315,6 @@ function renderRadiusPicker() {
     btn.addEventListener("click", () => {
       if (km === CONFIG.RADIUS_KM) return;
       CONFIG.RADIUS_KM = km;
-      trailHistory.clear();
-      sessionTrails.clear();
       renderRadiusPicker();
       if (activeTimer) clearTimeout(activeTimer);
       forceRefresh = true;
@@ -2203,8 +2426,6 @@ function initSydCloseup() {
   if (!btn) return;
   btn.addEventListener("click", () => {
     CONFIG.RADIUS_KM = 3;
-    trailHistory.clear();
-    sessionTrails.clear();
     renderRadiusPicker();
     setLocation(-33.946098, 151.177002, "Sydney Airport");
   });
@@ -2307,6 +2528,128 @@ async function tick() {
   activeTimer = setTimeout(tick, delay);
 }
 
+function initSettingsPanel() {
+  const settingsBtn = document.getElementById("settingsBtn");
+  const settingsPanel = document.getElementById("settingsPanel");
+  
+  settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    settingsPanel.classList.toggle("open");
+  });
+  
+  settingsPanel.addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("click", () => settingsPanel.classList.remove("open"));
+  
+  // Theme contrast actions
+  const midnightBtn = document.getElementById("themeMidnightBtn");
+  const contrastBtn = document.getElementById("themeContrastBtn");
+  const amberBtn = document.getElementById("themeAmberBtn");
+  const greenBtn = document.getElementById("themeGreenBtn");
+  
+  const themes = [
+    { btn: midnightBtn, cls: "" },
+    { btn: contrastBtn, cls: "theme-highcontrast" },
+    { btn: amberBtn, cls: "theme-amber" },
+    { btn: greenBtn, cls: "theme-green" }
+  ];
+  
+  // Restore saved theme
+  try {
+    const savedTheme = localStorage.getItem("flightwall_theme");
+    if (savedTheme) {
+      document.body.className = savedTheme;
+      if (CONFIG.RADAR_ONLY) document.body.classList.add("radar-only-mode");
+      themes.forEach(t => {
+        t.btn.classList.toggle("active", t.cls === savedTheme);
+      });
+    }
+  } catch(e) {}
+  
+  themes.forEach(theme => {
+    theme.btn.addEventListener("click", () => {
+      themes.forEach(t => t.btn.classList.remove("active"));
+      theme.btn.classList.add("active");
+      
+      // Keep radar-only layout status
+      const isRadarOnly = document.body.classList.contains("radar-only-mode");
+      document.body.className = theme.cls;
+      if (isRadarOnly) document.body.classList.add("radar-only-mode");
+      
+      try { localStorage.setItem("flightwall_theme", theme.cls); } catch(e) {}
+      
+      if (lastGoodData) {
+        const flights = parseStates(lastGoodData);
+        renderRadar(flights);
+      }
+    });
+  });
+  
+  // Filters actions
+  const filterType = document.getElementById("filterType");
+  const filterDirection = document.getElementById("filterDirection");
+  const filterMfg = document.getElementById("filterMfg");
+  
+  // Load saved filters if any
+  try {
+    const savedType = localStorage.getItem("flightwall_filter_type");
+    if (savedType) { FILTERS.type = savedType; filterType.value = savedType; }
+    
+    const savedDir = localStorage.getItem("flightwall_filter_direction");
+    if (savedDir) { FILTERS.direction = savedDir; filterDirection.value = savedDir; }
+    
+    const savedMfg = localStorage.getItem("flightwall_filter_mfg");
+    if (savedMfg) { FILTERS.manufacturer = savedMfg; filterMfg.value = savedMfg; }
+  } catch(e) {}
+  
+  const onFilterChange = () => {
+    FILTERS.type = filterType.value;
+    FILTERS.direction = filterDirection.value;
+    FILTERS.manufacturer = filterMfg.value;
+    
+    try {
+      localStorage.setItem("flightwall_filter_type", FILTERS.type);
+      localStorage.setItem("flightwall_filter_direction", FILTERS.direction);
+      localStorage.setItem("flightwall_filter_mfg", FILTERS.manufacturer);
+    } catch(e) {}
+    
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderBoard(flights);
+      renderRadar(flights);
+      renderDetailPanel(flights);
+    }
+  };
+  
+  filterType.addEventListener("change", onFilterChange);
+  filterDirection.addEventListener("change", onFilterChange);
+  filterMfg.addEventListener("change", onFilterChange);
+  
+  // Audio toggle
+  const soundToggleBtn = document.getElementById("soundToggleBtn");
+  try {
+    const savedSound = localStorage.getItem("flightwall_sound_alerts");
+    if (savedSound === "true") {
+      soundAlertMode = true;
+      soundToggleBtn.classList.add("active");
+      soundToggleBtn.textContent = "SOUND: ON";
+    }
+  } catch(e) {}
+  
+  soundToggleBtn.addEventListener("click", () => {
+    soundAlertMode = !soundAlertMode;
+    soundToggleBtn.classList.toggle("active", soundAlertMode);
+    soundToggleBtn.textContent = soundAlertMode ? "SOUND: ON" : "SOUND: OFF";
+    try { localStorage.setItem("flightwall_sound_alerts", String(soundAlertMode)); } catch(e) {}
+    
+    if (soundAlertMode && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const testUtter = new SpeechSynthesisUtterance("Audio alerts active");
+      testUtter.rate = 0.95;
+      window.speechSynthesis.speak(testUtter);
+    }
+  });
+}
+
 renderRadiusPicker();
 renderUnitPicker();
 initLocationPicker();
@@ -2316,6 +2659,7 @@ initHotSpots();
 initTrackPicker();
 initSydCloseup();
 initDismissPanel();
+initSettingsPanel();
 tick();
 
 // Prevent iOS Safari pull-to-refresh / bounce so it feels app-like
