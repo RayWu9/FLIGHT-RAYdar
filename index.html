@@ -73,15 +73,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     flex: 1;
-    justify-content: flex-start;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-    padding-bottom: 4px;
+    justify-content: flex-end;
   }
-  .header-controls::-webkit-scrollbar { display: none; }
   .status-line {
     font-family: var(--mono);
     font-size: 10px;
@@ -287,24 +282,43 @@
     color: var(--slate);
     letter-spacing: 0.1em;
   }
-  .center-mark { fill: var(--amber); }
-
+  /* ===== NEAREST AIRCRAFT BLOB ===== */
+  /* Split View (Integrated into board) */
   #nearest-blob {
-    position: absolute;
-    top: 10px; right: 10px;
-    background: rgba(11, 15, 20, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    position: relative;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--line);
     padding: 16px 20px;
     font-family: var(--mono);
-    width: 320px;
-    backdrop-filter: blur(16px) saturate(1.5);
-    -webkit-backdrop-filter: blur(16px) saturate(1.5);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
-    display: none;
-    z-index: 50;
+    width: 100%;
+    display: none; /* toggled by JS */
   }
   #nearest-blob.show { display: block; }
+  
+  /* Radar Only View (Floating glass blob) */
+  body.radar-only-mode #board-wrap {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 320px;
+    flex: none;
+    background: transparent;
+    border: none;
+    pointer-events: none; /* clicks pass through to radar */
+    z-index: 50;
+  }
+  body.radar-only-mode #board-wrap > * {
+    display: none;
+  }
+  body.radar-only-mode #nearest-blob {
+    display: block;
+    pointer-events: auto;
+    background: rgba(11, 15, 20, 0.65);
+    backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  }
+  
   #nearest-blob .nb-label {
     font-size: 8px;
     color: var(--cyan);
@@ -584,7 +598,7 @@
     #settingsPanel { top: 120px !important; }
   }
 
-  /* ===== FOCUS MODE — Bottom Sheet ===== */
+  /* ===== FOCUS MODE — Bottom Sheet (Mobile Radar Only) ===== */
   .nb-dismiss {
     display: none;
     position: absolute;
@@ -602,71 +616,36 @@
   }
   .nb-dismiss:hover { color: var(--amber); border-color: var(--amber-dim); }
   .nb-dismiss:active { opacity: 0.6; }
-  #nearest-blob.nb-focus {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: none;
-    border-radius: 18px 18px 0 0;
-    border-top: 1px solid var(--cyan-dim);
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    padding: 4px 24px max(env(safe-area-inset-bottom), 24px);
-    box-shadow: 0 -16px 52px rgba(0,0,0,0.8);
-    z-index: 100;
-    max-height: 62vh;
-    overflow-y: auto;
-    animation: slideUp 0.32s cubic-bezier(0.34, 1.15, 0.64, 1);
+  
+  @media (max-width: 850px) {
+    body.radar-only-mode #board-wrap {
+      top: auto; bottom: 0; left: 0; right: 0; width: 100%;
+    }
+    body.radar-only-mode #nearest-blob {
+      border-radius: 18px 18px 0 0;
+      border-top: 1px solid var(--cyan-dim);
+      border-left: none; border-right: none; border-bottom: none;
+      padding: 4px 24px max(env(safe-area-inset-bottom), 24px);
+      box-shadow: 0 -16px 52px rgba(0,0,0,0.8);
+      max-height: 62vh;
+      overflow-y: auto;
+      animation: slideUp 0.32s cubic-bezier(0.34, 1.15, 0.64, 1);
+    }
+    body.radar-only-mode #nearest-blob::before {
+      content: ''; display: block; width: 38px; height: 4px;
+      background: var(--slate); border-radius: 2px;
+      margin: 12px auto 16px; opacity: 0.4;
+    }
+    body.radar-only-mode .nb-dismiss { display: block; }
+    body.radar-only-mode .nb-callsign { font-size: 26px; }
+    body.radar-only-mode .nb-logo { height: 28px; max-width: 80px; }
   }
-  #nearest-blob.nb-focus::before {
-    content: '';
-    display: block;
-    width: 38px;
-    height: 4px;
-    background: var(--slate);
-    border-radius: 2px;
-    margin: 12px auto 16px;
-    opacity: 0.4;
-  }
-  #nearest-blob.nb-focus .nb-dismiss { display: block; }
-  #nearest-blob.nb-focus .nb-callsign { font-size: 26px; }
-  #nearest-blob.nb-focus .nb-iata { font-size: 13px; }
-  #nearest-blob.nb-focus .nb-logo { height: 28px; max-width: 80px; }
-  #nearest-blob.nb-focus .nb-label { font-size: 9px; }
   @keyframes slideUp {
     from { transform: translateY(60%); opacity: 0; }
     to   { transform: translateY(0);   opacity: 1; }
   }
-  /* Radar-only mode: push radar bottom so bottom sheet doesn't fully cover it */
-  body.radar-only-mode #radar-svg-wrap { padding-bottom: 0; }
-  
-  /* Radar-only mode iPad landscape layout */
-  @media (orientation: landscape) and (min-width: 800px) {
-    body.radar-only-mode #nearest-blob.nb-focus {
-      top: 0;
-      bottom: 0;
-      left: auto;
-      right: 0;
-      width: 360px;
-      max-height: none;
-      border-radius: 0;
-      border-top: none;
-      border-left: 1px solid var(--line);
-      padding-top: max(env(safe-area-inset-top), 24px);
-      box-shadow: -16px 0 52px rgba(0,0,0,0.8);
-      animation: slideLeft 0.3s cubic-bezier(0.34, 1.15, 0.64, 1);
-    }
-    body.radar-only-mode #nearest-blob.nb-focus::before { display: none; }
-    body.radar-only-mode #radar-svg-wrap { padding-bottom: 0; padding-right: 360px; }
-  }
-  @keyframes slideLeft {
-    from { transform: translateX(100%); opacity: 0; }
-    to   { transform: translateX(0);   opacity: 1; }
-  }
+  body.radar-only-mode #radar-wrap { flex: 1 0 100%; }
+
 
   /* Map Contrast Themes */
   body.theme-highcontrast {
@@ -889,105 +868,6 @@
       <div id="radar-svg-wrap">
         <svg id="radar-svg" viewBox="0 0 400 400" preserveAspectRatio="xMinYMid meet"></svg>
         <div class="radius-label" id="radiusLabel">RADIUS — KM</div>
-        <div id="nearest-blob">
-          <button class="nb-dismiss" id="nbDismiss" title="Close panel">✕</button>
-          <div class="nb-label" id="nbLabel">NEAREST AIRCRAFT</div>
-          <div class="nb-header">
-            <div class="nb-callsign-wrap">
-              <div class="nb-callsign" id="nbCallsign">—</div>
-              <div class="nb-iata" id="nbIata">—</div>
-            </div>
-            <img class="nb-logo" id="nbLogo" alt="" style="display:none;">
-          </div>
-          <div class="nb-sub" id="nbOperator">—</div>
-          <div class="nb-sub" id="nbType">—</div>
-          
-          <!-- Route Section -->
-          <div class="nb-route-section" id="nbRouteSection" style="display:none;">
-            <div class="nb-route-codes">
-              <span id="nbOriginCode">---</span>
-              <span style="font-size:12px; opacity:0.6;">✈</span>
-              <span id="nbDestCode">---</span>
-            </div>
-            <div class="nb-route-names">
-              <div id="nbOriginName" title="">---</div>
-              <div id="nbDestName" title="" style="text-align:right;">---</div>
-            </div>
-            
-            <!-- Progress Bar -->
-            <div class="progress-bar-container">
-              <div class="progress-bar-track">
-                <div class="progress-bar-fill" id="nbProgressFill"></div>
-                <div class="progress-plane" id="nbProgressPlane">✈</div>
-              </div>
-              <div class="progress-labels">
-                <span id="nbProgressPct">0%</span>
-                <span id="nbProgressFlown">—</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Flight Times & Details Grid -->
-          <div class="nb-grid" id="nbTimesGrid" style="display:none;">
-            <div class="nb-grid-item">
-              <span class="lbl">Elapsed</span>
-              <span class="val" id="nbElapsed">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Remaining</span>
-              <span class="val" id="nbRemaining">—</span>
-            </div>
-            <div class="nb-grid-item" style="grid-column: span 2;">
-              <span class="lbl">Est. Duration & ETA</span>
-              <span class="val" id="nbDurationETA">—</span>
-            </div>
-          </div>
-          
-          <div class="nb-grid">
-            <div class="nb-grid-item">
-              <span class="lbl">Distance</span>
-              <span class="val" id="nbDist">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Altitude</span>
-              <span class="val" id="nbAlt">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Speed</span>
-              <span class="val" id="nbSpd">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">V/S</span>
-              <span class="val" id="nbVrateSmall">—</span>
-            </div>
-          </div>
-          
-          <!-- Per-Flight Session Records -->
-          <div class="nb-grid" id="nbFlightRecords" style="display:none;">
-            <div class="nb-grid-item" style="grid-column: span 2;">
-              <span class="lbl">✈ SESSION RECORDS FOR THIS FLIGHT</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Peak Alt</span>
-              <span class="val" id="nbRecMaxAlt">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Top Speed</span>
-              <span class="val" id="nbRecMaxSpd">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Closest Pass</span>
-              <span class="val" id="nbRecClosest">—</span>
-            </div>
-            <div class="nb-grid-item">
-              <span class="lbl">Tracking Since</span>
-              <span class="val" id="nbRecSince">—</span>
-            </div>
-          </div>
-          
-          <div class="nb-vrate" id="nbVrate" style="display:none;">—</div>
-          <button class="nb-track-btn" id="nbTrackBtn">TRACK THIS FLIGHT</button>
-        </div>
       </div>
       <!-- Satellite Tile Canvas (behind radar SVG) -->
       <canvas id="satCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; opacity:0.35; z-index:0; display:none;"></canvas>
@@ -1003,6 +883,105 @@
     </div>
 
     <div id="board-wrap">
+      <div id="nearest-blob">
+        <button class="nb-dismiss" id="nbDismiss" title="Close panel">✕</button>
+        <div class="nb-label" id="nbLabel">NEAREST AIRCRAFT</div>
+        <div class="nb-header">
+          <div class="nb-callsign-wrap">
+            <div class="nb-callsign" id="nbCallsign">—</div>
+            <div class="nb-iata" id="nbIata">—</div>
+          </div>
+          <img class="nb-logo" id="nbLogo" alt="" style="display:none;">
+        </div>
+        <div class="nb-sub" id="nbOperator">—</div>
+        <div class="nb-sub" id="nbType">—</div>
+        
+        <!-- Route Section -->
+        <div class="nb-route-section" id="nbRouteSection" style="display:none;">
+          <div class="nb-route-codes">
+            <span id="nbOriginCode">---</span>
+            <span style="font-size:12px; opacity:0.6;">✈</span>
+            <span id="nbDestCode">---</span>
+          </div>
+          <div class="nb-route-names">
+            <div id="nbOriginName" title="">---</div>
+            <div id="nbDestName" title="" style="text-align:right;">---</div>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="progress-bar-container">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="nbProgressFill"></div>
+              <div class="progress-plane" id="nbProgressPlane">✈</div>
+            </div>
+            <div class="progress-labels">
+              <span id="nbProgressPct">0%</span>
+              <span id="nbProgressFlown">—</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Flight Times & Details Grid -->
+        <div class="nb-grid" id="nbTimesGrid" style="display:none;">
+          <div class="nb-grid-item">
+            <span class="lbl">Elapsed</span>
+            <span class="val" id="nbElapsed">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Remaining</span>
+            <span class="val" id="nbRemaining">—</span>
+          </div>
+          <div class="nb-grid-item" style="grid-column: span 2;">
+            <span class="lbl">Est. Duration & ETA</span>
+            <span class="val" id="nbDurationETA">—</span>
+          </div>
+        </div>
+        
+        <div class="nb-grid">
+          <div class="nb-grid-item">
+            <span class="lbl">Distance</span>
+            <span class="val" id="nbDist">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Altitude</span>
+            <span class="val" id="nbAlt">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Speed</span>
+            <span class="val" id="nbSpd">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">V/S</span>
+            <span class="val" id="nbVrateSmall">—</span>
+          </div>
+        </div>
+        
+        <!-- Per-Flight Session Records -->
+        <div class="nb-grid" id="nbFlightRecords" style="display:none;">
+          <div class="nb-grid-item" style="grid-column: span 2;">
+            <span class="lbl">✈ SESSION RECORDS FOR THIS FLIGHT</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Peak Alt</span>
+            <span class="val" id="nbRecMaxAlt">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Top Speed</span>
+            <span class="val" id="nbRecMaxSpd">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Closest Pass</span>
+            <span class="val" id="nbRecClosest">—</span>
+          </div>
+          <div class="nb-grid-item">
+            <span class="lbl">Tracking Since</span>
+            <span class="val" id="nbRecSince">—</span>
+          </div>
+        </div>
+        
+        <div class="nb-vrate" id="nbVrate" style="display:none;">—</div>
+        <button class="nb-track-btn" id="nbTrackBtn">TRACK THIS FLIGHT</button>
+      </div>
       <div class="board-head">
         <div>CALLSIGN</div>
         <div>REG</div>
@@ -1333,10 +1312,7 @@ const AIRPORT_RUNWAYS = {
           layoutBtn.classList.toggle("active", CONFIG.RADAR_ONLY);
           layoutBtn.textContent = CONFIG.RADAR_ONLY ? "SPLIT VIEW" : "RADAR ONLY";
         }
-        const bw = document.getElementById("board-wrap");
-        if (bw) bw.style.display = CONFIG.RADAR_ONLY ? "none" : "flex";
-        const rw = document.getElementById("radar-wrap");
-        if (rw) rw.style.flex = CONFIG.RADAR_ONLY ? "1 0 100%" : "0 0 42%";
+        document.body.classList.toggle("radar-only-mode", CONFIG.RADAR_ONLY);
       }, 0);
     }
   } catch (e) {}
@@ -2576,8 +2552,6 @@ function initLayoutToggle() {
     btn.classList.toggle("active", CONFIG.RADAR_ONLY);
     btn.textContent = CONFIG.RADAR_ONLY ? "SPLIT VIEW" : "RADAR ONLY";
     
-    document.getElementById("board-wrap").style.display = CONFIG.RADAR_ONLY ? "none" : "flex";
-    document.getElementById("radar-wrap").style.flex = CONFIG.RADAR_ONLY ? "1 0 100%" : "0 0 42%";
     document.body.classList.toggle("radar-only-mode", CONFIG.RADAR_ONLY);
     
     if (lastGoodData) {
