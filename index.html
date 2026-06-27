@@ -631,6 +631,30 @@
   }
   /* Radar-only mode: push radar bottom so bottom sheet doesn't fully cover it */
   body.radar-only-mode #radar-svg-wrap { padding-bottom: 0; }
+  
+  /* Radar-only mode iPad landscape layout */
+  @media (orientation: landscape) and (min-width: 800px) {
+    body.radar-only-mode #nearest-blob.nb-focus {
+      top: 0;
+      bottom: 0;
+      left: auto;
+      right: 0;
+      width: 360px;
+      max-height: none;
+      border-radius: 0;
+      border-top: none;
+      border-left: 1px solid var(--line);
+      padding-top: max(env(safe-area-inset-top), 24px);
+      box-shadow: -16px 0 52px rgba(0,0,0,0.8);
+      animation: slideLeft 0.3s cubic-bezier(0.34, 1.15, 0.64, 1);
+    }
+    body.radar-only-mode #nearest-blob.nb-focus::before { display: none; }
+    body.radar-only-mode #radar-svg-wrap { padding-bottom: 0; padding-right: 360px; }
+  }
+  @keyframes slideLeft {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+  }
 
   /* Map Contrast Themes */
   body.theme-highcontrast {
@@ -775,6 +799,7 @@
                 <span style="font-family: var(--mono); font-size: 10.5px; color: var(--slate-bright);">Manufacturer:</span>
                 <select id="filterMfg" style="background: var(--bg); border: 1px solid var(--line); color: var(--amber); font-family: var(--mono); font-size: 11px; padding: 4px; border-radius: 3px; outline: none; width: 140px;">
                   <option value="all">All Aircraft</option>
+                  <option value="commercial">Commercial Only</option>
                   <option value="boeing">Boeing Only</option>
                   <option value="airbus">Airbus Only</option>
                   <option value="other">Others</option>
@@ -1539,7 +1564,7 @@ function parseStates(raw) {
       if (FILTERS.type !== "all") {
         const cleanCallsign = f.callsign.replace(/\s+/g, "");
         const route = routeCache.get(cleanCallsign);
-        const isDomestic = f.reg && f.reg.startsWith("VH-") && (!route || (route.origin.country === "Australia" && route.destination.country === "Australia"));
+        const isDomestic = (f.reg && f.reg.startsWith("VH-")) || (route && !route.notFound && route.origin && route.origin.country === "Australia" && route.destination && route.destination.country === "Australia");
         if (FILTERS.type === "domestic" && !isDomestic) return false;
         if (FILTERS.type === "international" && isDomestic) return false;
       }
@@ -1548,7 +1573,7 @@ function parseStates(raw) {
       if (FILTERS.direction !== "all") {
         const cleanCallsign = f.callsign.replace(/\s+/g, "");
         const route = routeCache.get(cleanCallsign);
-        if (!route || route.notFound) return false;
+        if (!route || route.notFound || !route.origin || !route.destination) return false;
         const isLeaving = route.origin.iata_code === "SYD" || route.origin.icao_code === "YSSY";
         const isArriving = route.destination.iata_code === "SYD" || route.destination.icao_code === "YSSY";
         if (FILTERS.direction === "departures" && !isLeaving) return false;
@@ -1559,11 +1584,17 @@ function parseStates(raw) {
       if (FILTERS.manufacturer !== "all") {
         const desc = f.typeDesc ? f.typeDesc.toUpperCase() : "";
         const code = f.typeCode ? f.typeCode.toUpperCase() : "";
-        const isAirbus = desc.includes("AIRBUS") || code.startsWith("A3");
-        const isBoeing = desc.includes("BOEING") || code.startsWith("B7");
-        if (FILTERS.manufacturer === "boeing" && !isBoeing) return false;
-        if (FILTERS.manufacturer === "airbus" && !isAirbus) return false;
-        if (FILTERS.manufacturer === "other" && (isBoeing || isAirbus)) return false;
+        
+        if (FILTERS.manufacturer === "commercial") {
+          const isCommercial = code.match(/^(B7|A3|A2|E1|E7|CRJ|BCS|AT|DH8)/) || desc.match(/(BOEING|AIRBUS|EMBRAER|BOMBARDIER|ATR|DE HAVILLAND)/);
+          if (!isCommercial) return false;
+        } else {
+          const isAirbus = desc.includes("AIRBUS") || code.startsWith("A3");
+          const isBoeing = desc.includes("BOEING") || code.startsWith("B7");
+          if (FILTERS.manufacturer === "boeing" && !isBoeing) return false;
+          if (FILTERS.manufacturer === "airbus" && !isAirbus) return false;
+          if (FILTERS.manufacturer === "other" && (isBoeing || isAirbus)) return false;
+        }
       }
 
       return true;
