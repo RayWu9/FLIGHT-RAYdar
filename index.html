@@ -723,6 +723,12 @@
       <div class="pill-group" id="sydCloseupGroup">
         <button class="pill-btn" id="sydCloseupBtn">SYD ✈ 3KM</button>
       </div>
+      <div class="pill-group">
+        <button class="pill-btn" id="sydMovBtn">SYD BOARD</button>
+      </div>
+      <div class="pill-group">
+        <button class="pill-btn" id="satToggleBtn">SAT MAP</button>
+      </div>
       <div class="pill-group" id="altFilterGroup">
         <button class="pill-btn active" id="altFilterBtn">HIDE GROUND</button>
       </div>
@@ -782,6 +788,13 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <span class="lbl" style="margin-bottom: 0;">NEARBY AUDIO ALERTS</span>
               <button class="pill-btn" id="soundToggleBtn">SOUND: OFF</button>
+            </div>
+          </div>
+
+          <!-- Sweep Speed -->
+          <div class="loc-custom">
+            <div class="lbl">REFRESH INTERVAL</div>
+            <div class="pill-group" id="sweepPicker" style="margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
             </div>
           </div>
 
@@ -911,10 +924,45 @@
               <span class="val" id="nbVrateSmall">—</span>
             </div>
           </div>
+          
+          <!-- Per-Flight Session Records -->
+          <div class="nb-grid" id="nbFlightRecords" style="display:none;">
+            <div class="nb-grid-item" style="grid-column: span 2;">
+              <span class="lbl">✈ SESSION RECORDS FOR THIS FLIGHT</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Peak Alt</span>
+              <span class="val" id="nbRecMaxAlt">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Top Speed</span>
+              <span class="val" id="nbRecMaxSpd">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Closest Pass</span>
+              <span class="val" id="nbRecClosest">—</span>
+            </div>
+            <div class="nb-grid-item">
+              <span class="lbl">Tracking Since</span>
+              <span class="val" id="nbRecSince">—</span>
+            </div>
+          </div>
+          
           <div class="nb-vrate" id="nbVrate" style="display:none;">—</div>
           <button class="nb-track-btn" id="nbTrackBtn">TRACK THIS FLIGHT</button>
         </div>
       </div>
+      <!-- Satellite Tile Canvas (behind radar SVG) -->
+      <canvas id="satCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; opacity:0.35; z-index:0; display:none;"></canvas>
+    </div>
+
+    <!-- SYD Movements Overlay -->
+    <div id="sydMovPanel" style="display:none; position:fixed; top:0; right:0; bottom:0; width:340px; background:var(--bg-panel); border-left:1px solid var(--line); z-index:90; overflow-y:auto; box-shadow:-8px 0 32px rgba(0,0,0,0.6); padding:16px; font-family:var(--mono);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <span style="font-size:10px; letter-spacing:0.12em; color:var(--cyan); text-transform:uppercase;">SYD Movements</span>
+        <button id="sydMovClose" style="background:none; border:1px solid var(--line); color:var(--slate); font-family:var(--mono); font-size:12px; cursor:pointer; padding:3px 8px; border-radius:3px;">✕</button>
+      </div>
+      <div id="sydMovList"></div>
     </div>
 
     <div id="board-wrap">
@@ -990,6 +1038,16 @@ const STATS = {
   closestDist: Infinity,
   uniqueFlights: new Set()
 };
+
+// Per-flight session records: keyed by icao24
+const flightRecords = new Map();
+
+// SYD arrivals/departures movement log
+const sydMovements = [];
+const SYD_MOVEMENT_MAX = 30;
+
+// Sweep speed options
+const SWEEP_OPTIONS = [4, 8, 15, 30];
 
 const ICAO_TO_IATA = {
   "QFA": "QF", "CPA": "CX", "SIA": "SQ", "ANZ": "NZ", "UAL": "UA",
@@ -1421,6 +1479,7 @@ function parseStates(raw) {
         track: a.track != null ? Math.round(a.track) : null,
         vrate: a.baro_rate != null ? Math.round(a.baro_rate) : null,
         distKm,
+        gndDistKm: groundDistKm(distKm, altFt),
         brg
       };
     });
@@ -1532,6 +1591,48 @@ function updateStatsAndAlerts(flights) {
       STATS.closestDist = f.distKm;
     }
 
+    // Per-flight records
+    let rec = flightRecords.get(f.icao24);
+    if (!rec) {
+      rec = { callsign: f.callsign, maxAlt: 0, maxSpeed: 0, closestDist: Infinity, firstSeen: Date.now() };
+    }
+    if (f.altFt !== null && f.altFt > rec.maxAlt) rec.maxAlt = f.altFt;
+    if (f.spdKt !== null && f.spdKt > rec.maxSpeed) rec.maxSpeed = f.spdKt;
+    if (f.distKm < rec.closestDist) rec.closestDist = f.distKm;
+    rec.callsign = f.callsign;
+    flightRecords.set(f.icao24, rec);
+
+    // SYD movement detection (arrivals / departures with direction)
+    const distToSYD = haversineKm(-33.946098, 151.177002, f.lat, f.lon);
+    if (distToSYD < 5 && f.altFt !== null && f.altFt < 2000 && f.spdKt !== null && f.spdKt > 60) {
+      const existingMov = sydMovements.find(m => m.icao24 === f.icao24);
+      if (!existingMov) {
+        const cleanCS = f.callsign.replace(/\s+/g, "");
+        const route = routeCache.get(cleanCS);
+        const isArrival = route && !route.notFound && (route.destination.iata_code === "SYD" || route.destination.icao_code === "YSSY");
+        const isDeparture = route && !route.notFound && (route.origin.iata_code === "SYD" || route.origin.icao_code === "YSSY");
+
+        let compass = "—";
+        if (f.track !== null) {
+          if (f.track >= 315 || f.track < 45) compass = "N";
+          else if (f.track >= 45 && f.track < 135) compass = "E";
+          else if (f.track >= 135 && f.track < 225) compass = "S";
+          else compass = "W";
+        }
+
+        sydMovements.unshift({
+          icao24: f.icao24,
+          callsign: f.callsign,
+          type: isArrival ? "ARR" : isDeparture ? "DEP" : (f.vrate < -200 ? "ARR" : "DEP"),
+          direction: compass,
+          time: new Date(),
+          typeCode: f.typeCode || "—"
+        });
+
+        if (sydMovements.length > SYD_MOVEMENT_MAX) sydMovements.pop();
+      }
+    }
+
     // Nearby Voice Announcements
     if (soundAlertMode && f.distKm <= 4 && !announcedFlights.has(f.callsign)) {
       announcedFlights.add(f.callsign);
@@ -1554,6 +1655,25 @@ function updateStatsAndAlerts(flights) {
       announcedFlights.delete(callsign);
     }
   });
+
+  // Auto-zoom proximity: if tracked or selected flight is within close range in radar-only mode
+  if (CONFIG.RADAR_ONLY && (trackedId || selectedId)) {
+    const target = flights.find(fl => {
+      if (trackedId) return fl.callsign.toUpperCase() === trackedId || fl.icao24 === trackedId;
+      return fl.icao24 === selectedId;
+    });
+    if (target && target.distKm < CONFIG.RADIUS_KM * 0.15) {
+      // Find smaller radius that still keeps the aircraft visible
+      const smallerOptions = CONFIG.RADIUS_OPTIONS.filter(r => r < CONFIG.RADIUS_KM && target.distKm < r * 0.8);
+      if (smallerOptions.length > 0) {
+        const newRadius = smallerOptions[smallerOptions.length - 1];
+        if (newRadius !== CONFIG.RADIUS_KM) {
+          CONFIG.RADIUS_KM = newRadius;
+          renderRadiusPicker();
+        }
+      }
+    }
+  }
 
   // Update Stats UI
   document.getElementById("statsMaxSpeed").textContent = STATS.maxSpeed ? `${STATS.maxSpeed} ${CONFIG.UNITS === "imperial" ? "mph" : "km/h"}` : "—";
@@ -1640,15 +1760,23 @@ function fmtDist(km) {
   if (CONFIG.UNITS === "imperial") return `${Math.round(km / 1.60934)} mi`;
   return `${Math.round(km)} km`;
 }
-function fmtAlt(ft) {
+function fmtAlt(ft, onGround) {
   if (ft == null) return "—";
+  if (onGround || ft === 0) return "GND";
   if (CONFIG.UNITS === "imperial") return ft.toLocaleString() + " ft";
   return Math.round(ft * 0.3048).toLocaleString() + " m";
 }
-function fmtSpd(kt) {
+function fmtSpd(kt, onGround) {
   if (kt == null) return "—";
+  if (onGround && kt === 0) return "—";
   if (CONFIG.UNITS === "imperial") return Math.round(kt * 1.15078) + " mph";
   return Math.round(kt * 1.852) + " km/h";
+}
+function groundDistKm(slantKm, altFt) {
+  if (altFt == null || altFt <= 0) return slantKm;
+  const altKm = altFt * 0.0003048;
+  if (altKm >= slantKm) return 0;
+  return Math.sqrt(slantKm * slantKm - altKm * altKm);
 }
 
 /* ============================================================
@@ -1794,8 +1922,8 @@ function renderBoard(flights) {
           ${f.typeCode ? `<span class="typecode">${f.typeCode}</span>` : ""}
         </div>
       </div>
-      <div class="alt">${fmtAlt(f.altFt)}</div>
-      <div class="spd">${fmtSpd(f.spdKt)}</div>
+      <div class="alt">${fmtAlt(f.altFt, f.onGround)}</div>
+      <div class="spd">${fmtSpd(f.spdKt, f.onGround)}</div>
       <div class="hdg"><span class="hdg-arrow">${headingArrow(f.track)}</span>${f.track != null ? f.track + "°" : "—"}</div>
       <div class="vrate-cell ${vr.cls}" title="${vr.full}">${vr.label}</div>
     </div>`;
@@ -1858,9 +1986,9 @@ function renderDetailPanel(flights) {
   document.getElementById("nbOperator").textContent = f.operator || "Operator unknown";
   document.getElementById("nbType").textContent = f.typeDesc || f.typeCode || "Aircraft type unknown";
   
-  document.getElementById("nbDist").textContent = fmtDist(f.distKm);
-  document.getElementById("nbAlt").textContent = fmtAlt(f.altFt);
-  document.getElementById("nbSpd").textContent = fmtSpd(f.spdKt);
+  document.getElementById("nbDist").textContent = fmtDist(f.gndDistKm) + (f.altFt > 0 ? ` (gnd)` : ``);
+  document.getElementById("nbAlt").textContent = fmtAlt(f.altFt, f.onGround);
+  document.getElementById("nbSpd").textContent = fmtSpd(f.spdKt, f.onGround);
 
   const vr = vrateInfo(f.vrate);
   document.getElementById("nbVrateSmall").textContent = vr.label;
@@ -1938,6 +2066,14 @@ function renderDetailPanel(flights) {
     setTrackedId(isCurrentlyLocked ? null : (f.callsign !== "—" ? f.callsign : f.icao24));
     renderDetailPanel(flights);
   };
+
+  // Per-flight session records
+  renderFlightRecords(f);
+
+  // Update SYD movements panel if open
+  if (document.getElementById("sydMovPanel").style.display === "block") {
+    renderSydMovements();
+  }
 }
 
 function getActiveAirport() {
@@ -2185,6 +2321,13 @@ function renderRadar(flights) {
     }
     
     html += `<text class="plane-label ${isLocked ? "locked" : ""}" x="${x + 8}" y="${labelY}" style="pointer-events:none;">${f.callsign}</text>`;
+
+    // SYD Direction indicator (ARR/DEP N/S/E/W)
+    const sydDir = classifySydDirection(f);
+    if (sydDir) {
+      const dirColor = sydDir.type === "ARR" ? "var(--climb)" : "var(--descend)";
+      html += `<text x="${x + 8}" y="${labelY + 9}" fill="${dirColor}" font-family="var(--mono)" font-size="7px" font-weight="700" opacity="0.85" style="pointer-events:none;">${sydDir.type} ${sydDir.compass}</text>`;
+    }
   });
 
   svg.innerHTML = html;
@@ -2198,6 +2341,9 @@ function renderRadar(flights) {
   sweepEl.style.animation = "none";
   void sweepEl.offsetWidth; 
   sweepEl.style.animation = `sweep ${CONFIG.SWEEP_SECONDS}s linear infinite`;
+
+  // Refresh satellite tiles if enabled
+  if (satEnabled) renderSatTiles();
 }
 
 /* ============================================================
@@ -2648,6 +2794,284 @@ function initSettingsPanel() {
       window.speechSynthesis.speak(testUtter);
     }
   });
+
+  // Sweep speed picker
+  renderSweepPicker();
+}
+
+/* ============================================================
+   Sweep speed picker
+   ============================================================ */
+function renderSweepPicker() {
+  const wrap = document.getElementById("sweepPicker");
+  if (!wrap) return;
+  wrap.querySelectorAll(".pill-btn").forEach(b => b.remove());
+  SWEEP_OPTIONS.forEach(sec => {
+    const btn = document.createElement("button");
+    btn.className = "pill-btn" + (sec === CONFIG.SWEEP_SECONDS ? " active" : "");
+    btn.textContent = sec + "S";
+    btn.addEventListener("click", () => {
+      CONFIG.SWEEP_SECONDS = sec;
+      try { localStorage.setItem("flightwall_sweep", String(sec)); } catch(e) {}
+      renderSweepPicker();
+      if (activeTimer) { clearTimeout(activeTimer); forceRefresh = true; tick(); }
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+// Restore saved sweep speed
+try {
+  const savedSweep = parseInt(localStorage.getItem("flightwall_sweep"));
+  if (SWEEP_OPTIONS.includes(savedSweep)) CONFIG.SWEEP_SECONDS = savedSweep;
+} catch(e) {}
+
+/* ============================================================
+   SYD Movements Panel
+   ============================================================ */
+function initSydMovements() {
+  const btn = document.getElementById("sydMovBtn");
+  const panel = document.getElementById("sydMovPanel");
+  const closeBtn = document.getElementById("sydMovClose");
+  if (!btn || !panel) return;
+
+  btn.addEventListener("click", () => {
+    const isOpen = panel.style.display === "block";
+    panel.style.display = isOpen ? "none" : "block";
+    btn.classList.toggle("active", !isOpen);
+    if (!isOpen) renderSydMovements();
+  });
+  closeBtn.addEventListener("click", () => {
+    panel.style.display = "none";
+    btn.classList.remove("active");
+  });
+}
+
+function renderSydMovements() {
+  const list = document.getElementById("sydMovList");
+  if (!list) return;
+  if (sydMovements.length === 0) {
+    list.innerHTML = `<div style="color:var(--slate); font-size:11px; text-align:center; padding:20px;">No recent SYD movements detected yet.<br>Flights near YSSY will appear here.</div>`;
+    return;
+  }
+  list.innerHTML = sydMovements.map(m => {
+    const typeColor = m.type === "ARR" ? "var(--climb)" : "var(--descend)";
+    const timeStr = m.time.toTimeString().slice(0, 5);
+    return `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 4px; border-bottom:1px solid var(--line); font-size:11px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:${typeColor}; font-weight:700; font-size:9px; width:28px;">${m.type}</span>
+        <span style="color:var(--amber); font-weight:600;">${m.callsign}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="color:var(--slate-bright);">${m.typeCode}</span>
+        <span style="color:var(--slate); font-size:9px;">→ ${m.direction}</span>
+        <span style="color:var(--slate); font-size:9px;">${timeStr}</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ============================================================
+   Satellite tile overlay
+   ============================================================ */
+let satEnabled = false;
+const satTileCache = new Map();
+
+function initSatToggle() {
+  const btn = document.getElementById("satToggleBtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    satEnabled = !satEnabled;
+    btn.classList.toggle("active", satEnabled);
+    const canvas = document.getElementById("satCanvas");
+    if (canvas) canvas.style.display = satEnabled ? "block" : "none";
+    if (satEnabled) renderSatTiles();
+  });
+}
+
+function renderSatTiles() {
+  const canvas = document.getElementById("satCanvas");
+  if (!canvas || !satEnabled) return;
+  const wrap = document.getElementById("radar-svg-wrap");
+  if (!wrap) return;
+
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const maxR = Math.min(cx, cy) * 0.875; // match SVG's 175/200 ratio
+
+  // Calculate tile zoom and coordinates for Esri World Imagery
+  const zoom = Math.max(2, Math.min(18, Math.round(15 - Math.log2(CONFIG.RADIUS_KM))));
+  const lat = CONFIG.CENTER_LAT, lon = CONFIG.CENTER_LON;
+
+  // Convert lat/lon to tile coordinates
+  const n = Math.pow(2, zoom);
+  const xtile = Math.floor((lon + 180) / 360 * n);
+  const ytile = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
+
+  // Load center tile and surrounding tiles
+  const tilesToLoad = [];
+  for (let dx = -2; dx <= 2; dx++) {
+    for (let dy = -2; dy <= 2; dy++) {
+      tilesToLoad.push({ x: xtile + dx, y: ytile + dy, dx, dy });
+    }
+  }
+
+  // Tile pixel size on screen
+  const tileWorldSize = 360 / n; // degrees per tile
+  const kmPerDeg = 111.32 * Math.cos(lat * Math.PI / 180);
+  const tileKm = tileWorldSize * kmPerDeg;
+  const tilePixels = (tileKm / CONFIG.RADIUS_KM) * maxR;
+
+  // Center offset within the center tile
+  const centerTileLon = (xtile / n) * 360 - 180;
+  const centerTileLat = Math.atan(Math.sinh(Math.PI * (1 - 2 * ytile / n))) * 180 / Math.PI;
+  const offsetXPx = ((lon - centerTileLon) / tileWorldSize) * tilePixels;
+  const offsetYPx = ((centerTileLat - lat) / (tileWorldSize * Math.cos(lat * Math.PI / 180))) * tilePixels;
+
+  // Create circular clip
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
+  ctx.clip();
+
+  tilesToLoad.forEach(t => {
+    const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${t.y}/${t.x}`;
+    const cacheKey = `${zoom}/${t.y}/${t.x}`;
+
+    if (satTileCache.has(cacheKey)) {
+      const img = satTileCache.get(cacheKey);
+      if (img.complete && img.naturalWidth > 0) {
+        const tx = cx + (t.dx * tilePixels) - offsetXPx;
+        const ty = cy + (t.dy * tilePixels) - offsetYPx;
+        ctx.drawImage(img, tx - tilePixels / 2, ty - tilePixels / 2, tilePixels, tilePixels);
+      }
+    } else {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        satTileCache.set(cacheKey, img);
+        renderSatTiles(); // re-render when tile loads
+      };
+      img.onerror = () => { satTileCache.set(cacheKey, img); };
+      satTileCache.set(cacheKey, img);
+      img.src = tileUrl;
+    }
+  });
+
+  ctx.restore();
+}
+
+/* ============================================================
+   Pinch/Scroll Zoom on Radar
+   ============================================================ */
+function initRadarZoom() {
+  const radarWrap = document.getElementById("radar-svg-wrap");
+  if (!radarWrap) return;
+
+  // Mouse wheel zoom
+  radarWrap.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const currentIdx = CONFIG.RADIUS_OPTIONS.indexOf(CONFIG.RADIUS_KM);
+    let newIdx = currentIdx;
+    if (e.deltaY > 0) {
+      // Scroll down = zoom out = larger radius
+      newIdx = Math.min(CONFIG.RADIUS_OPTIONS.length - 1, currentIdx + 1);
+    } else {
+      // Scroll up = zoom in = smaller radius
+      newIdx = Math.max(0, currentIdx - 1);
+    }
+    if (newIdx !== currentIdx) {
+      CONFIG.RADIUS_KM = CONFIG.RADIUS_OPTIONS[newIdx];
+      renderRadiusPicker();
+      if (activeTimer) clearTimeout(activeTimer);
+      forceRefresh = true;
+      tick();
+    }
+  }, { passive: false });
+
+  // Touch pinch zoom
+  let lastPinchDist = 0;
+  radarWrap.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+    }
+  }, { passive: true });
+
+  radarWrap.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const diff = dist - lastPinchDist;
+
+      if (Math.abs(diff) > 40) {
+        const currentIdx = CONFIG.RADIUS_OPTIONS.indexOf(CONFIG.RADIUS_KM);
+        let newIdx = currentIdx;
+        if (diff > 0) newIdx = Math.max(0, currentIdx - 1); // Pinch out = zoom in
+        else newIdx = Math.min(CONFIG.RADIUS_OPTIONS.length - 1, currentIdx + 1); // Pinch in = zoom out
+
+        if (newIdx !== currentIdx) {
+          CONFIG.RADIUS_KM = CONFIG.RADIUS_OPTIONS[newIdx];
+          renderRadiusPicker();
+          if (activeTimer) clearTimeout(activeTimer);
+          forceRefresh = true;
+          tick();
+        }
+        lastPinchDist = dist;
+      }
+    }
+  }, { passive: false });
+}
+
+/* ============================================================
+   Per-flight records display in detail panel
+   ============================================================ */
+function renderFlightRecords(f) {
+  const recPanel = document.getElementById("nbFlightRecords");
+  if (!recPanel) return;
+
+  const rec = flightRecords.get(f.icao24);
+  if (!rec) { recPanel.style.display = "none"; return; }
+
+  recPanel.style.display = "grid";
+  document.getElementById("nbRecMaxAlt").textContent = fmtAlt(rec.maxAlt);
+  document.getElementById("nbRecMaxSpd").textContent = rec.maxSpeed > 0 ? fmtSpd(rec.maxSpeed) : "—";
+  document.getElementById("nbRecClosest").textContent = rec.closestDist < Infinity ? fmtDist(rec.closestDist) : "—";
+
+  const elapsed = Date.now() - rec.firstSeen;
+  const mins = Math.floor(elapsed / 60000);
+  document.getElementById("nbRecSince").textContent = mins < 1 ? "< 1 min" : `${mins} min ago`;
+}
+
+/* ============================================================
+   SYD Direction indicators on radar
+   ============================================================ */
+function classifySydDirection(f) {
+  if (f.track == null) return null;
+  const distToSYD = haversineKm(-33.946098, 151.177002, f.lat, f.lon);
+  if (distToSYD > 8 || f.altFt == null || f.altFt > 3000) return null;
+
+  const cleanCS = f.callsign.replace(/\s+/g, "");
+  const route = routeCache.get(cleanCS);
+  const isArr = route && !route.notFound && (route.destination.iata_code === "SYD" || route.destination.icao_code === "YSSY");
+  const isDep = route && !route.notFound && (route.origin.iata_code === "SYD" || route.origin.icao_code === "YSSY");
+  const type = isArr ? "ARR" : isDep ? "DEP" : (f.vrate < -200 ? "ARR" : f.vrate > 200 ? "DEP" : null);
+  if (!type) return null;
+
+  let compass;
+  if (f.track >= 315 || f.track < 45) compass = "N";
+  else if (f.track >= 45 && f.track < 135) compass = "E";
+  else if (f.track >= 135 && f.track < 225) compass = "S";
+  else compass = "W";
+
+  return { type, compass };
 }
 
 renderRadiusPicker();
@@ -2660,6 +3084,9 @@ initTrackPicker();
 initSydCloseup();
 initDismissPanel();
 initSettingsPanel();
+initSydMovements();
+initSatToggle();
+initRadarZoom();
 tick();
 
 // Prevent iOS Safari pull-to-refresh / bounce so it feels app-like
