@@ -2075,31 +2075,36 @@ function renderDetailPanel(flights) {
 
   // Altitude Sparkline Chart
   const altContainer = document.getElementById("nbAltitudeChartContainer");
-  if (trailHistory.has(f.icao24)) {
-    const hist = trailHistory.get(f.icao24);
-    if (hist.points && hist.points.length > 1) {
-      const alts = hist.points.map(p => p.alt || 0);
-      const maxAlt = Math.max(...alts, 1);
-      const minAlt = Math.min(...alts);
-      const range = maxAlt - minAlt || 1;
-      
-      let pathD = "";
-      alts.forEach((a, idx) => {
-        const x = (idx / (alts.length - 1)) * 100;
-        const y = 100 - ((a - minAlt) / range) * 100;
-        pathD += `${idx === 0 ? 'M' : 'L'} ${x} ${y} `;
-      });
-      document.getElementById("nbAltitudePath").setAttribute("d", pathD);
-      const lastY = 100 - ((alts[alts.length-1] - minAlt) / range) * 100;
-      const dot = document.getElementById("nbAltitudeDot");
-      dot.setAttribute("cx", "100");
-      dot.setAttribute("cy", lastY);
-      altContainer.style.display = "block";
+  if (altContainer) {
+    if (trailHistory.has(f.icao24)) {
+      const hist = trailHistory.get(f.icao24);
+      if (hist.points && hist.points.length > 1) {
+        const alts = hist.points.map(p => p.alt || 0);
+        const maxAlt = Math.max(...alts, 1);
+        const minAlt = Math.min(...alts);
+        const range = maxAlt - minAlt || 1;
+        
+        let pathD = "";
+        alts.forEach((a, idx) => {
+          const x = (idx / (alts.length - 1)) * 100;
+          const y = 100 - ((a - minAlt) / range) * 100;
+          pathD += `${idx === 0 ? 'M' : 'L'} ${x} ${y} `;
+        });
+        const pathEl = document.getElementById("nbAltitudePath");
+        if (pathEl) pathEl.setAttribute("d", pathD);
+        const lastY = 100 - ((alts[alts.length-1] - minAlt) / range) * 100;
+        const dot = document.getElementById("nbAltitudeDot");
+        if (dot) {
+          dot.setAttribute("cx", "100");
+          dot.setAttribute("cy", lastY);
+        }
+        altContainer.style.display = "block";
+      } else {
+        altContainer.style.display = "none";
+      }
     } else {
       altContainer.style.display = "none";
     }
-  } else {
-    altContainer.style.display = "none";
   }
 
   const trackBtn = document.getElementById("nbTrackBtn");
