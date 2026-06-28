@@ -1066,7 +1066,7 @@
     <span id="countCount">0 AIRCRAFT TRACKED</span>
   </footer>
 </div>
-<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.2.0 (Premium)</div>
+<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: red; font-family: var(--mono); font-size: 14px; font-weight: bold; opacity: 1.0; z-index: 999; pointer-events:none;">RAYdar v1.2.1 (Premium)</div>
 
 <script>
 /* ============================================================
@@ -2302,52 +2302,52 @@ function renderRadar(flights) {
 
   html += `<circle class="center-mark" cx="${cx}" cy="${cy}" r="4" />`;
 
-  // 7) Dynamic Hot Spots / Runways
+  // 7) Determine Active Runways (Airspace Control Panel)
   let activeOps = "SOUTH"; // default
-  if (CONFIG.SHOW_HOTSPOTS) {
-    const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
-    if (apt) {
-      // Extended Runways
-      apt.runways.forEach(rw => {
-        const centerPt = latLonFromBearing(apt.arpLat, apt.arpLon, rw.offsetDir, rw.offsetM / 1000);
-        const p1 = latLonFromBearing(centerPt.lat, centerPt.lon, rw.bearing, 30);
-        const p2 = latLonFromBearing(centerPt.lat, centerPt.lon, (rw.bearing + 180) % 360, 30);
-        const pt1 = getPoint(p1.lat, p1.lon);
-        const pt2 = getPoint(p2.lat, p2.lon);
-        html += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" 
-                       stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.25" stroke-linecap="round" />`;
-      });
-      
-      // Determine active runway usage based on active flights
-      let headings = [];
-      flights.forEach(f => {
-        if (f.alt < 5000 && haversineKm(f.lat, f.lon, apt.arpLat, apt.arpLon) < 20 && f.vrate !== 0) {
-          headings.push(f.track);
-        }
-      });
-      if (headings.length > 0) {
-        let avgHdg = headings.reduce((a,b)=>a+b, 0) / headings.length;
-        if (avgHdg > 90 && avgHdg < 250) activeOps = "SOUTH"; // 16L/R
-        else activeOps = "NORTH"; // 34L/R
+  const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
+  if (apt) {
+    let headings = [];
+    flights.forEach(f => {
+      if (f.alt < 5000 && haversineKm(f.lat, f.lon, apt.arpLat, apt.arpLon) < 20 && f.vrate !== 0) {
+        headings.push(f.track);
       }
-      
-      // Update Airspace Control Panel Text
-      document.getElementById("activeRunwaysText").textContent = activeOps === "SOUTH" ? "16L / 16R (SOUTH OPS)" : "34L / 34R (NORTH OPS)";
-      
-      // Draw SIDs and STARs
-      YSSY_PROCEDURES.forEach(proc => {
-        if (proc.ops !== activeOps) return;
-        if (proc.points.length < 2) return;
-        let pathD = "";
-        proc.points.forEach((c, idx) => {
-          const pt = getPoint(c.lat, c.lon);
-          if (idx === 0) pathD += `M ${pt.x} ${pt.y}`;
-          else pathD += ` L ${pt.x} ${pt.y}`;
-        });
-        const color = proc.type === "ARR" ? "var(--cyan)" : "var(--amber)";
-        html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round" />`;
-      });
+    });
+    if (headings.length > 0) {
+      let avgHdg = headings.reduce((a,b)=>a+b, 0) / headings.length;
+      if (avgHdg > 90 && avgHdg < 250) activeOps = "SOUTH"; // 16L/R
+      else activeOps = "NORTH"; // 34L/R
     }
+  }
+  
+  // Update Airspace Control Panel Text
+  document.getElementById("activeRunwaysText").textContent = activeOps === "SOUTH" ? "16L / 16R (SOUTH OPS)" : "34L / 34R (NORTH OPS)";
+
+  // 8) Dynamic Hot Spots / Runways
+  if (CONFIG.SHOW_HOTSPOTS && apt) {
+    // Extended Runways
+    apt.runways.forEach(rw => {
+      const centerPt = latLonFromBearing(apt.arpLat, apt.arpLon, rw.offsetDir, rw.offsetM / 1000);
+      const p1 = latLonFromBearing(centerPt.lat, centerPt.lon, rw.bearing, 30);
+      const p2 = latLonFromBearing(centerPt.lat, centerPt.lon, (rw.bearing + 180) % 360, 30);
+      const pt1 = getPoint(p1.lat, p1.lon);
+      const pt2 = getPoint(p2.lat, p2.lon);
+      html += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" 
+                     stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.25" stroke-linecap="round" />`;
+    });
+    
+    // Draw SIDs and STARs
+    YSSY_PROCEDURES.forEach(proc => {
+      if (proc.ops !== activeOps) return;
+      if (proc.points.length < 2) return;
+      let pathD = "";
+      proc.points.forEach((c, idx) => {
+        const pt = getPoint(c.lat, c.lon);
+        if (idx === 0) pathD += `M ${pt.x} ${pt.y}`;
+        else pathD += ` L ${pt.x} ${pt.y}`;
+      });
+      const color = proc.type === "ARR" ? "var(--cyan)" : "var(--amber)";
+      html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round" />`;
+    });
   }
 
   // Update Arrival Sequence
@@ -2958,7 +2958,7 @@ try {
    SYD Movements Panel Session Tracking
    ============================================================ */
 function updateSydMovements(flights) {
-  const apt = AIRPORT_RUNWAYS[`${CONFIG.CENTER_LAT.toFixed(2)},${CONFIG.CENTER_LON.toFixed(2)}`];
+  const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
   if (!apt) return;
   const now = new Date();
   
