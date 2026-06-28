@@ -955,7 +955,7 @@
         
         <!-- Photo Container -->
         <div id="nbPhotoContainer" style="display:none; margin: 10px 0; border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--cyan-dim);">
-          <img id="nbAircraftPhoto" style="width: 100%; display: block; min-height: 100px; background: rgba(0,0,0,0.2);" />
+          <img id="nbAircraftPhoto" style="width: 100%; max-height: 160px; object-fit: cover; display: block; min-height: 80px; background: rgba(0,0,0,0.2);" />
           <div id="nbPhotoCredit" style="position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.7); color: #fff; font-size: 9px; padding: 2px 6px;"></div>
         </div>
         
@@ -1037,6 +1037,16 @@
             <span class="val" id="nbRecClosest">—</span>
           </div>
           <div class="nb-grid-item">
+            <span class="lbl">Since</span>
+            <span class="val" id="nbRecSince">—</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="board-header">
+        <div>FLIGHT</div>
+        <div>TYPE</div>
+        <div>DEST</div>
         <div id="altHeadLabel">ALT FT</div>
         <div id="spdHeadLabel">SPD KT</div>
         <div>HDG</div>
@@ -1755,11 +1765,11 @@ function getAircraftCategory(f) {
   return "default";
 }
 
-const AIRLINE_LOGO_BASE = "https://images.kiwi.com/airlines/64";
 function airlineLogoUrl(airlineIcao) {
   if (!airlineIcao) return null;
   const iata = ICAO_TO_IATA[airlineIcao.toUpperCase()];
-  return `${AIRLINE_LOGO_BASE}/${iata || airlineIcao.toUpperCase()}.png`;
+  if (!iata) return null; // Avoid returning kiwi placeholder for unmapped/general aviation
+  return `https://images.kiwi.com/airlines/64/${iata}.png`;
 }
 const LOGO_ONERROR = `this.style.display='none'; this.dataset.failed='true';`;
 
@@ -2295,7 +2305,7 @@ function renderRadar(flights) {
   // 7) Dynamic Hot Spots / Runways
   let activeOps = "SOUTH"; // default
   if (CONFIG.SHOW_HOTSPOTS) {
-    const apt = AIRPORT_RUNWAYS[`${CONFIG.CENTER_LAT.toFixed(2)},${CONFIG.CENTER_LON.toFixed(2)}`];
+    const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
     if (apt) {
       // Extended Runways
       apt.runways.forEach(rw => {
@@ -2341,7 +2351,7 @@ function renderRadar(flights) {
   }
 
   // Update Arrival Sequence
-  const apt = AIRPORT_RUNWAYS[`${CONFIG.CENTER_LAT.toFixed(2)},${CONFIG.CENTER_LON.toFixed(2)}`];
+  const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
   if (apt) {
     const arrivals = flights.filter(f => {
       const cleanCallsign = f.callsign.replace(/\s+/g, "");
