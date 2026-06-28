@@ -2362,7 +2362,6 @@ function renderRadar(flights) {
   }
 
   // Update Arrival Sequence
-  const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
   if (apt) {
     const arrivals = flights.filter(f => {
       const cleanCallsign = f.callsign.replace(/\s+/g, "");
