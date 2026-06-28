@@ -1793,6 +1793,8 @@ function flightColor(f) {
 
 function updateTrailHistory(flights) {
   const now = Date.now();
+  const seen = new Set(flights.map(f => f.icao24));
+  
   flights.forEach(f => {
     let hist = trailHistory.get(f.icao24) || { points: [] };
     if (hist.points.length === 0 || haversineKm(hist.points[hist.points.length-1].lat, hist.points[hist.points.length-1].lon, f.lat, f.lon) > 0.1) {
@@ -1812,7 +1814,7 @@ function updateTrailHistory(flights) {
   });
   
   for (const [icao24, entry] of trailHistory) {
-    if (!seen.has(icao24) && (now - entry.lastSeen) > STALE_MS) {
+    if (!seen.has(icao24) && (now - entry.lastSeen) > 60000) {
       trailHistory.delete(icao24);
     }
   }
