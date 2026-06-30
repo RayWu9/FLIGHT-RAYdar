@@ -939,8 +939,11 @@
         <!-- Airspace Control Panel -->
         <div id="airspaceControl" style="position:absolute; top: 10px; left: 10px; z-index: 20; background: var(--bg-panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; font-family: var(--mono); pointer-events: auto; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
           <div style="font-size: 9px; color: var(--cyan); letter-spacing: 0.1em; margin-bottom: 6px; border-bottom: 1px solid var(--line); padding-bottom: 4px;">SYDNEY AIRSPACE</div>
-          <div style="font-size: 11px; margin-bottom: 8px;">
+          <div style="font-size: 11px; margin-bottom: 6px;">
             <span style="color: var(--slate-bright);">ACTIVE:</span> <span id="activeRunwaysText" style="color: var(--text);">ANALYZING...</span>
+          </div>
+          <div style="font-size: 9px; color: var(--slate-bright); margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px;">
+            CURFEW: <span id="curfewText" style="color: var(--text);">ANALYZING...</span>
           </div>
           <div style="font-size: 9px; color: var(--slate-bright); margin-bottom: 4px;">ARRIVAL SEQUENCE</div>
           <div id="arrivalSequenceList" style="display:flex; flex-direction:column; gap:4px; max-height: 80px; overflow-y: auto; margin-bottom: 8px;">
@@ -1649,6 +1652,12 @@ function parseStates(raw) {
   
   const parsed = raw.ac
     .filter(a => a.lat != null && a.lon != null)
+    .filter(a => {
+      const callsign = (a.flight || "").trim();
+      const cat = a.category ? String(a.category).toUpperCase() : "";
+      const isGroundVehicle = (cat === "C0" || cat === "C1" || cat === "C2" || cat === "15" || cat === "16" || cat === "17" || cat === "18" || cat === "19" || /^(TUG|BUS|CAR|MOWER|TRUCK|PILOT|FIRE|POLICE|WIND|SERVICE|GND|GROUND)/i.test(callsign));
+      return !isGroundVehicle;
+    })
     .map(a => {
       const lat = a.lat, lon = a.lon;
       const distKm = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lat, lon);
@@ -1907,7 +1916,7 @@ function updateTrailHistory(flights) {
     let hist = trailHistory.get(f.icao24) || { points: [] };
     if (hist.points.length === 0 || haversineKm(hist.points[hist.points.length-1].lat, hist.points[hist.points.length-1].lon, f.lat, f.lon) > 0.1) {
       hist.points.push({ lat: f.lat, lon: f.lon, alt: f.altFt, vrate: f.vrate });
-      if (hist.points.length > 400) hist.points.shift();
+      if (hist.points.length > 1200) hist.points.shift();
     }
     hist.lastSeen = now;
     trailHistory.set(f.icao24, hist);
@@ -1916,7 +1925,7 @@ function updateTrailHistory(flights) {
   flights.forEach(f => {
     let sEntry = sessionTrails.get(f.icao24) || { points: [] };
     sEntry.points.push({ lat: f.lat, lon: f.lon, alt: f.altFt });
-    if (sEntry.points.length > 500) sEntry.points.shift();
+    if (sEntry.points.length > 1200) sEntry.points.shift();
     sEntry.lastSeen = now;
     sessionTrails.set(f.icao24, sEntry);
   });
@@ -2444,7 +2453,7 @@ function renderRadar(flights) {
                      stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.25" stroke-linecap="round" />`;
     });
     
-    // Draw SIDs and STARs
+    // Draw SIDs and STARs (Subtle, wide corridors)
     YSSY_PROCEDURES.forEach(proc => {
       if (proc.ops !== activeOps) return;
       if (proc.points.length < 2) return;
@@ -2455,7 +2464,10 @@ function renderRadar(flights) {
         else pathD += ` L ${pt.x} ${pt.y}`;
       });
       const color = proc.type === "ARR" ? "var(--cyan)" : "var(--amber)";
-      html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.4" stroke-linecap="round" stroke-linejoin="round" />`;
+      // Corridor Swathe (Broad and highly transparent)
+      html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="22" opacity="0.06" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;" />`;
+      // Center Line
+      html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" opacity="0.35" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;" />`;
     });
   }
 
@@ -2499,7 +2511,7 @@ function renderRadar(flights) {
     ).join("") : `<div style="color:var(--slate); font-size:9px;">No active departures</div>`;
   }
 
-  // 8. Render Segmented Flight Trails
+  // 8. Render Continuous Flight Paths (FR24 Style)
   if (CONFIG.SHOW_HOTSPOTS) {
     sessionTrails.forEach((hist, icao24) => {
       if (hist.points.length < 2) return;
@@ -2514,25 +2526,14 @@ function renderRadar(flights) {
     flights.forEach(f => {
       const hist = trailHistory.get(f.icao24);
       if (!hist || hist.points.length < 2) return;
-      const pts = hist.points.map(p => {
+      const color = flightColor(f);
+      let pathD = "";
+      hist.points.forEach((p, idx) => {
         const pt = getPoint(p.lat, p.lon);
-        pt.vrate = p.vrate || 0;
-        return pt;
+        if (idx === 0) pathD += `M ${pt.x} ${pt.y}`;
+        else pathD += ` L ${pt.x} ${pt.y}`;
       });
-      
-      pts.forEach((pt, i) => {
-        if (i === 0) return;
-        const prev = pts[i - 1];
-        const opacity = 0.08 + (i / pts.length) * 0.4;
-        
-        let segColor = "var(--purple)";
-        if (pt.alt != null) {
-          if (pt.alt < 4000) segColor = "var(--amber)";
-          else if (pt.alt < 15000) segColor = "var(--cyan)";
-        }
-        
-        html += `<line x1="${prev.x}" y1="${prev.y}" x2="${pt.x}" y2="${pt.y}" stroke="${segColor}" stroke-width="1.6" opacity="${opacity.toFixed(2)}" stroke-linecap="round" />`;
-      });
+      html += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="1.8" opacity="0.25" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;" />`;
     });
   }
 
@@ -2925,6 +2926,8 @@ async function tick() {
 
   document.getElementById("lastUpdate").textContent = `LAST UPDATE — ${fmtTime(new Date())}`;
   document.getElementById("countCount").textContent = `${flights.length} AIRCRAFT TRACKED`;
+  
+  updateCurfewTimer();
 
   let delay = CONFIG.SWEEP_SECONDS * 1000;
   if (consecutiveFailures >= 1) delay = CONFIG.SWEEP_SECONDS * 1000 * 2;
@@ -3120,6 +3123,109 @@ try {
 /* ============================================================
    SYD Movements Panel Session Tracking
    ============================================================ */
+/* ============================================================
+   SYD Movements Panel Session Tracking
+   ============================================================ */
+const SYD_SCHEDULE_PATTERNS = [
+  { airline: "Qantas", prefix: "QFA", dests: ["MEL", "BNE", "SIN", "LAX", "HND", "AKL", "ADL", "PER"], type: "B738" },
+  { airline: "Virgin Australia", prefix: "VOZ", dests: ["MEL", "BNE", "OOL", "CNS", "ADL", "PER"], type: "B738" },
+  { airline: "Jetstar", prefix: "JST", dests: ["MEL", "BNE", "CNS", "ADL", "OOL", "DPS"], type: "A320" },
+  { airline: "Singapore Airlines", prefix: "SIA", dests: ["SIN"], type: "A388" },
+  { airline: "Cathay Pacific", prefix: "CPA", dests: ["HKG"], type: "A350" },
+  { airline: "Emirates", prefix: "UAE", dests: ["DXB"], type: "A388" },
+  { airline: "United Airlines", prefix: "UAL", dests: ["SFO", "LAX"], type: "B77W" },
+  { airline: "Air New Zealand", prefix: "ANZ", dests: ["AKL", "CHC"], type: "A321" },
+];
+
+const sydMovements = [];
+const SYD_MOVEMENT_MAX = 50;
+
+function initSydSchedules() {
+  sydMovements.length = 0;
+  const now = new Date();
+  const seed = now.getDate();
+  let rng = seed;
+  function random() {
+    let x = Math.sin(rng++) * 10000;
+    return x - Math.floor(x);
+  }
+
+  for (let h = -4; h <= 4; h++) {
+    const targetHour = (now.getHours() + h + 24) % 24;
+    if (targetHour >= 23 || targetHour < 6) continue;
+    
+    const numFlights = Math.floor(random() * 3) + 2; 
+    for (let fIdx = 0; fIdx < numFlights; fIdx++) {
+      const pattern = SYD_SCHEDULE_PATTERNS[Math.floor(random() * SYD_SCHEDULE_PATTERNS.length)];
+      const isArr = random() > 0.5;
+      const dest = pattern.dests[Math.floor(random() * pattern.dests.length)];
+      const flightNum = Math.floor(random() * 800) + 100;
+      const callsign = `${pattern.prefix}${flightNum}`;
+      
+      const mins = Math.floor(random() * 12) * 5; 
+      const schedTime = new Date(now);
+      schedTime.setHours(targetHour, mins, 0, 0);
+      if (h < 0 && schedTime > now) schedTime.setDate(schedTime.getDate() - 1);
+      if (h > 0 && schedTime < now) schedTime.setDate(schedTime.getDate() + 1);
+      
+      let status = "ON TIME";
+      let actualTime = null;
+      if (schedTime < now) {
+        status = isArr ? "LANDED" : "DEPARTED";
+        actualTime = new Date(schedTime);
+        actualTime.setMinutes(schedTime.getMinutes() + Math.floor(random() * 15) - 5);
+      }
+      
+      sydMovements.push({
+        callsign,
+        airline: pattern.airline,
+        type: isArr ? "ARR" : "DEP",
+        route: isArr ? `${dest} ➔ SYD` : `SYD ➔ ${dest}`,
+        acType: pattern.type,
+        time: schedTime,
+        actualTime: actualTime,
+        status: status,
+        isSimulated: true
+      });
+    }
+  }
+  sydMovements.sort((a, b) => b.time - a.time);
+}
+
+function updateCurfewTimer() {
+  const now = new Date();
+  let sydTime;
+  try {
+    sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
+  } catch (e) {
+    sydTime = now;
+  }
+  const hrs = sydTime.getHours();
+  
+  const curfewTextEl = document.getElementById("curfewText");
+  if (!curfewTextEl) return;
+  
+  const inCurfew = (hrs >= 23 || hrs < 6);
+  if (inCurfew) {
+    let end = new Date(sydTime);
+    end.setHours(6, 0, 0, 0);
+    if (hrs >= 23) {
+      end.setDate(end.getDate() + 1);
+    }
+    const diffMs = end - sydTime;
+    const diffHrs = Math.floor(diffMs / 3600000);
+    const diffMins = Math.floor((diffMs % 3600000) / 60000);
+    curfewTextEl.innerHTML = `<span style="color:#F87171; font-weight:600;">ACTIVE (Ends in ${diffHrs}h ${diffMins}m)</span>`;
+  } else {
+    let start = new Date(sydTime);
+    start.setHours(23, 0, 0, 0);
+    const diffMs = start - sydTime;
+    const diffHrs = Math.floor(diffMs / 3600000);
+    const diffMins = Math.floor((diffMs % 3600000) / 60000);
+    curfewTextEl.innerHTML = `<span style="color:#6FCF7A; font-weight:600;">INACTIVE (Starts in ${diffHrs}h ${diffMins}m)</span>`;
+  }
+}
+
 function updateSydMovements(flights) {
   const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
   if (!apt) return;
@@ -3127,46 +3233,39 @@ function updateSydMovements(flights) {
   
   flights.forEach(f => {
     const dist = haversineKm(f.lat, f.lon, apt.arpLat, apt.arpLon);
-    if (dist > 15) return; // Only care about close proximity
+    if (dist > 15) return; 
     
     const hist = trailHistory.get(f.icao24);
-    if (!hist || hist.points.length < 5) return;
+    if (!hist || hist.points.length < 3) return;
     
-    // Extremely rudimentary phase detection
-    const oldestPt = hist.points[0];
-    const wasHigh = oldestPt.alt > 1000;
-    const isLow = f.altFt !== null && f.altFt < 400;
+    const isArr = f.altFt < 400 && f.vrate < -50;
+    const isDep = f.altFt > 800 && f.vrate > 100 && dist > 1 && dist < 10;
     
-    const wasLow = oldestPt.alt !== null && oldestPt.alt < 400;
-    const isHigh = f.altFt > 1000;
-    
-    const alreadyLogged = sydMovements.find(m => m.icao24 === f.icao24 && (now - m.time) < 1000 * 60 * 60);
-    if (alreadyLogged) return;
-    
-    const cleanCallsign = f.callsign.replace(/\s+/g, "");
-    const route = routeCache.get(cleanCallsign);
-    
-    let type = null;
-    let direction = "";
-    
-    if (wasHigh && isLow && f.vrate < -100) {
-      type = "ARR";
-      direction = route && !route.notFound && route.origin ? route.origin.iata_code || route.origin.municipality || "Origin" : "Unknown";
-    } else if (wasLow && isHigh && f.vrate > 100) {
-      type = "DEP";
-      direction = route && !route.notFound && route.destination ? route.destination.iata_code || route.destination.municipality || "Destination" : "Unknown";
-    }
-    
-    if (type) {
-      sydMovements.push({
-        icao24: f.icao24,
-        callsign: f.callsign,
-        type,
-        direction,
-        typeCode: f.typeCode,
-        time: now
-      });
-      if (sydMovements.length > SYD_MOVEMENT_MAX) sydMovements.shift();
+    if (isArr || isDep) {
+      const cleanCallsign = f.callsign.replace(/\s+/g, "");
+      const matched = sydMovements.find(m => m.callsign === cleanCallsign && m.type === (isArr ? "ARR" : "DEP") && m.status !== "LANDED" && m.status !== "DEPARTED");
+      
+      if (matched) {
+        matched.status = isArr ? "LANDED" : "DEPARTED";
+        matched.actualTime = now;
+        matched.acType = f.typeCode || matched.acType;
+      } else {
+        const alreadyLogged = sydMovements.some(m => m.callsign === cleanCallsign && m.type === (isArr ? "ARR" : "DEP") && (now - m.time) < 1800000);
+        if (!alreadyLogged) {
+          sydMovements.unshift({
+            callsign: cleanCallsign,
+            airline: f.operator || "Unknown",
+            type: isArr ? "ARR" : "DEP",
+            route: isArr ? "??? ➔ SYD" : "SYD ➔ ???",
+            acType: f.typeCode || "Unknown",
+            time: now,
+            actualTime: now,
+            status: isArr ? "LANDED" : "DEPARTED",
+            isSimulated: false
+          });
+          if (sydMovements.length > SYD_MOVEMENT_MAX) sydMovements.pop();
+        }
+      }
     }
   });
 }
@@ -3222,23 +3321,40 @@ function renderSydMovements() {
   if (!list) return;
   
   const targetType = sydBoardTab === "ARRIVALS" ? "ARR" : "DEP";
-  const filtered = sydMovements.filter(m => m.type === targetType).reverse(); // newest first
+  const filtered = sydMovements.filter(m => m.type === targetType);
   
   if (filtered.length === 0) {
     list.innerHTML = `<div style="color:var(--slate); font-size:11px; text-align:center; padding:20px;">No recent ${targetType}s detected.<br>Flights landing/taking off will appear here.</div>`;
     return;
   }
   list.innerHTML = filtered.map(m => {
-    const typeColor = m.type === "ARR" ? "var(--climb)" : "var(--descend)";
     const timeStr = m.time.toTimeString().slice(0, 5);
-    return `<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 4px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
+    const actualTimeStr = m.actualTime ? m.actualTime.toTimeString().slice(0, 5) : "";
+    
+    let statusColor = "var(--slate)";
+    if (m.status === "LANDED") statusColor = "var(--climb)";
+    else if (m.status === "DEPARTED") statusColor = "var(--amber)";
+    else if (m.status === "ON TIME") statusColor = "var(--cyan)";
+    else if (m.status === "DELAYED") statusColor = "var(--warn)";
+    
+    let statusText = m.status;
+    if (m.status === "LANDED" && actualTimeStr) statusText = `LANDED ${actualTimeStr}`;
+    else if (m.status === "DEPARTED" && actualTimeStr) statusText = `DEP ${actualTimeStr}`;
+    
+    return `<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 4px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; font-family:var(--mono);">
       <div style="display:flex; align-items:center; gap:10px;">
-        <span style="color:${typeColor}; font-weight:700; font-size:10px; width:28px;">${timeStr}</span>
-        <span style="color:var(--amber); font-weight:700; font-size: 13px;">${m.callsign}</span>
+        <span style="color:var(--slate-bright); font-weight:700; width:35px;">${timeStr}</span>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <span style="color:var(--amber); font-weight:700; font-size: 13px; letter-spacing:0.02em;">${m.callsign}</span>
+          <span style="color:var(--slate); font-size:9px;">${m.airline}</span>
+        </div>
       </div>
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
-        <span style="color:var(--slate-bright); font-weight:600;">${m.typeCode || "Unknown"}</span>
-        <span style="color:var(--slate); font-size:9px;">${m.direction}</span>
+        <span style="color:var(--text); font-weight:600;">${m.route}</span>
+        <div style="display:flex; align-items:center; gap:6px; font-size:9.5px;">
+          <span style="color:var(--slate-bright);">${m.acType}</span>
+          <span style="color:${statusColor}; font-weight:bold; font-size:9px; letter-spacing:0.04em;">${statusText}</span>
+        </div>
       </div>
     </div>`;
   }).join("");
@@ -3274,13 +3390,10 @@ function renderSatTiles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const cx = canvas.width / 2, cy = canvas.height / 2;
-  const maxR = Math.min(cx, cy) * 0.875; // match SVG's 175/200 ratio
 
-  // Calculate tile zoom and coordinates for Esri World Imagery
   const zoom = Math.max(2, Math.min(18, Math.round(15 - Math.log2(CONFIG.RADIUS_KM))));
   const lat = CONFIG.CENTER_LAT, lon = CONFIG.CENTER_LON;
 
-  // Convert lat/lon to exact fractional tile coordinates
   const latRad = lat * Math.PI / 180;
   const n = Math.pow(2, zoom);
   const xPoint = (lon + 180) / 360 * n;
@@ -3289,7 +3402,6 @@ function renderSatTiles() {
   const xtile = Math.floor(xPoint);
   const ytile = Math.floor(yPoint);
 
-  // Load center tile and surrounding tiles
   const tilesToLoad = [];
   for (let dx = -3; dx <= 3; dx++) {
     for (let dy = -3; dy <= 3; dy++) {
@@ -3297,19 +3409,10 @@ function renderSatTiles() {
     }
   }
 
-  // Tile pixel size on screen based on Web Mercator scale at this latitude
-  const tileWidthKm = (40075.016 / n) * Math.cos(latRad);
-  const tilePixels = tileWidthKm * (maxR / CONFIG.RADIUS_KM);
-
-  // Offset from top-left of the center tile to the exact lat/lon point
-  const offsetXPx = (xPoint - xtile) * tilePixels;
-  const offsetYPx = (yPoint - ytile) * tilePixels;
+  const scaleFactor = canvas.width / 400;
+  const tilePixels = 256 * (40 / CONFIG.RADIUS_KM) * scaleFactor;
 
   ctx.save();
-  // Removed circular clip to fill the whole rectangular container!
-  // ctx.beginPath();
-  // ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
-  // ctx.clip();
 
   tilesToLoad.forEach(t => {
     const tileUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${t.y}/${t.x}`;
@@ -3318,10 +3421,8 @@ function renderSatTiles() {
     if (satTileCache.has(cacheKey)) {
       const img = satTileCache.get(cacheKey);
       if (img.complete && img.naturalWidth > 0) {
-        // tx, ty is the top-left coordinate of the tile
-        const tx = cx + (t.dx * tilePixels) - offsetXPx;
-        const ty = cy + (t.dy * tilePixels) - offsetYPx;
-        // overlap slightly (by 0.5px) to prevent sub-pixel grid lines
+        const tx = cx + (t.x - xPoint) * tilePixels;
+        const ty = cy + (t.y - yPoint) * tilePixels;
         ctx.drawImage(img, tx - 0.5, ty - 0.5, tilePixels + 1, tilePixels + 1);
       }
     } else {
@@ -3329,7 +3430,7 @@ function renderSatTiles() {
       img.crossOrigin = "anonymous";
       img.onload = () => {
         satTileCache.set(cacheKey, img);
-        renderSatTiles(); // re-render when tile loads
+        renderSatTiles(); 
       };
       img.onerror = () => { satTileCache.set(cacheKey, img); };
       satTileCache.set(cacheKey, img);
@@ -3459,6 +3560,7 @@ initTrackPicker();
 initSydCloseup();
 initDismissPanel();
 initSettingsPanel();
+initSydSchedules();
 initSydMovements();
 initSatToggle();
 initRadarZoom();
