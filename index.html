@@ -265,7 +265,8 @@
     min-width: 0;
   }
   #radar-svg-wrap { flex: 1; min-height: 0; position: relative; }
-  #radar-svg { width: 100%; height: 100%; display: block; }
+  #radar-svg { width: 100%; height: 100%; display: block; filter: brightness(var(--radar-brightness, 1)) contrast(var(--radar-contrast, 1)); }
+  #satCanvas { filter: brightness(var(--radar-brightness, 1)) contrast(var(--radar-contrast, 1)); }
   .ring { fill: none; stroke: var(--cyan-dim); stroke-width: 1; }
   .crosshair { stroke: var(--cyan-dim); stroke-width: 1; }
   @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -819,6 +820,17 @@
               <button class="pill-btn" id="themeAmberBtn">AMBER CRT</button>
               <button class="pill-btn" id="themeGreenBtn">RADAR GREEN</button>
             </div>
+            <!-- Brightness / Contrast Sliders -->
+            <div style="display: flex; flex-direction: column; gap: 8px; font-family: var(--mono); font-size: 10px; color: var(--slate-bright); margin-bottom: 12px; padding: 4px 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span>BRIGHTNESS: <span id="valBrightness">100%</span></span>
+                <input type="range" id="sliderBrightness" min="50" max="150" value="100" style="width: 140px; cursor: pointer;">
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span>CONTRAST: <span id="valContrast">100%</span></span>
+                <input type="range" id="sliderContrast" min="50" max="150" value="100" style="width: 140px; cursor: pointer;">
+              </div>
+            </div>
           </div>
 
           <!-- Filters -->
@@ -931,7 +943,11 @@
             <span style="color: var(--slate-bright);">ACTIVE:</span> <span id="activeRunwaysText" style="color: var(--text);">ANALYZING...</span>
           </div>
           <div style="font-size: 9px; color: var(--slate-bright); margin-bottom: 4px;">ARRIVAL SEQUENCE</div>
-          <div id="arrivalSequenceList" style="display:flex; flex-direction:column; gap:4px; max-height: 80px; overflow-y: auto;">
+          <div id="arrivalSequenceList" style="display:flex; flex-direction:column; gap:4px; max-height: 80px; overflow-y: auto; margin-bottom: 8px;">
+            <!-- Sequence items go here -->
+          </div>
+          <div style="font-size: 9px; color: var(--slate-bright); margin-bottom: 4px; border-top: 1px solid var(--line); padding-top: 6px;">DEPARTURES LINEUP</div>
+          <div id="departureSequenceList" style="display:flex; flex-direction:column; gap:4px; max-height: 80px; overflow-y: auto;">
             <!-- Sequence items go here -->
           </div>
         </div>
@@ -1095,7 +1111,7 @@
     <span id="countCount">0 AIRCRAFT TRACKED</span>
   </footer>
 </div>
-<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: #00ff00; font-family: var(--mono); font-size: 14px; font-weight: bold; opacity: 1.0; z-index: 999; pointer-events:none;">RAYdar v1.2.2 (Premium - Cache Cleared)</div>
+<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.3.0 (Premium)</div>
 
 <script>
 /* ============================================================
@@ -1143,10 +1159,16 @@ const announcedFlights = new Set();
 const STATS = {
   maxSpeed: 0,
   maxSpeedCS: "",
+  maxSpeedType: "",
+  maxSpeedReg: "",
   maxAlt: 0,
   maxAltCS: "",
+  maxAltType: "",
+  maxAltReg: "",
   closestDist: Infinity,
   closestCS: "",
+  closestType: "",
+  closestReg: "",
   uniqueFlights: new Set()
 };
 
@@ -1446,6 +1468,14 @@ const AIRPORT_RUNWAYS = {
       }
     }
   } catch (e) {}
+
+  // Slider Listeners
+  document.getElementById("brightnessSlider").addEventListener("input", (e) => {
+    document.getElementById("radar-svg").style.opacity = e.target.value;
+  });
+  document.getElementById("contrastSlider").addEventListener("input", (e) => {
+    document.documentElement.style.filter = `contrast(${e.target.value})`;
+  });
 })();
 
 /* ============================================================
@@ -1737,32 +1767,52 @@ function updateStatsAndAlerts(flights) {
     STATS.uniqueFlights.add(f.icao24);
     if (f.spdKt !== null) {
       const speedValue = Math.round(CONFIG.UNITS === "imperial" ? f.spdKt * 1.15078 : f.spdKt * 1.852);
-      if (speedValue > STATS.maxSpeed) { STATS.maxSpeed = speedValue; STATS.maxSpeedCS = f.callsign; }
+      if (speedValue > STATS.maxSpeed) {
+        STATS.maxSpeed = speedValue;
+        STATS.maxSpeedCS = f.callsign;
+        STATS.maxSpeedType = f.typeCode || "Unknown";
+        STATS.maxSpeedReg = f.reg || "Unknown";
+      }
     }
     if (f.altFt !== null) {
       const altValue = Math.round(CONFIG.UNITS === "imperial" ? f.altFt : f.altFt * 0.3048);
-      if (altValue > STATS.maxAlt) { STATS.maxAlt = altValue; STATS.maxAltCS = f.callsign; }
+      if (altValue > STATS.maxAlt) {
+        STATS.maxAlt = altValue;
+        STATS.maxAltCS = f.callsign;
+        STATS.maxAltType = f.typeCode || "Unknown";
+        STATS.maxAltReg = f.reg || "Unknown";
+      }
     }
     if (f.distKm !== null && f.distKm < STATS.closestDist) {
-      STATS.closestDist = f.distKm; STATS.closestCS = f.callsign;
+      STATS.closestDist = f.distKm;
+      STATS.closestCS = f.callsign;
+      STATS.closestType = f.typeCode || "Unknown";
+      STATS.closestReg = f.reg || "Unknown";
     }
     let rec = flightRecords.get(f.icao24) || { maxAlt: 0, maxSpeed: 0, closestDist: Infinity, firstSeen: Date.now() };
     if (f.altFt !== null && f.altFt > rec.maxAlt) rec.maxAlt = f.altFt;
     if (f.spdKt !== null && f.spdKt > rec.maxSpeed) rec.maxSpeed = f.spdKt;
-    if (f.distKm < rec.closestDist) rec.closestDist = f.distKm;
-    rec.callsign = f.callsign;
+    if (f.distKm !== null && f.distKm < rec.closestDist) rec.closestDist = f.distKm;
     flightRecords.set(f.icao24, rec);
+
     if (soundAlertMode && f.distKm <= 4 && !announcedFlights.has(f.callsign)) {
       announcedFlights.add(f.callsign);
       if ('speechSynthesis' in window) {
-        const utter = new SpeechSynthesisUtterance(`Aircraft nearby: ${getIataFlightNumber(f.callsign) || f.callsign}`);
+        const iataNum = getIataFlightNumber(f.callsign);
+        const name = iataNum || f.callsign;
+        const type = f.typeDesc || f.typeCode || "aircraft";
+        const alt = f.altFt ? `${f.altFt} feet` : "on the ground";
+        const text = `Nearby aircraft: ${name}, a ${type}, at ${alt}`;
+        const utter = new SpeechSynthesisUtterance(text);
         window.speechSynthesis.speak(utter);
       }
     }
   });
-  document.getElementById("statsMaxSpeed").innerHTML = STATS.maxSpeed ? `${STATS.maxSpeed} ${CONFIG.UNITS === "imperial" ? "mph" : "km/h"} <span style="font-size:9px; color:var(--cyan); font-weight:600;">(${STATS.maxSpeedCS})</span>` : "—";
-  document.getElementById("statsMaxAlt").innerHTML = STATS.maxAlt ? `${STATS.maxAlt.toLocaleString()} ${CONFIG.UNITS === "imperial" ? "ft" : "m"} <span style="font-size:9px; color:var(--cyan); font-weight:600;">(${STATS.maxAltCS})</span>` : "—";
-  document.getElementById("statsClosestDist").innerHTML = STATS.closestDist !== Infinity ? `${fmtDist(STATS.closestDist)} <span style="font-size:9px; color:var(--cyan); font-weight:600;">(${STATS.closestCS})</span>` : "—";
+  const speedUnit = CONFIG.UNITS === "imperial" ? "mph" : "km/h";
+  const altUnit = CONFIG.UNITS === "imperial" ? "ft" : "m";
+  document.getElementById("statsMaxSpeed").innerHTML = STATS.maxSpeed ? `${STATS.maxSpeed} ${speedUnit} <span style="font-size:8.5px; color:var(--cyan); font-weight:600; display:block;">(${STATS.maxSpeedCS} - ${STATS.maxSpeedType} - ${STATS.maxSpeedReg})</span>` : "-";
+  document.getElementById("statsMaxAlt").innerHTML = STATS.maxAlt ? `${STATS.maxAlt.toLocaleString()} ${altUnit} <span style="font-size:8.5px; color:var(--cyan); font-weight:600; display:block;">(${STATS.maxAltCS} - ${STATS.maxAltType} - ${STATS.maxAltReg})</span>` : "-";
+  document.getElementById("statsClosestDist").innerHTML = STATS.closestDist !== Infinity ? `${fmtDist(STATS.closestDist)} <span style="font-size:8.5px; color:var(--cyan); font-weight:600; display:block;">(${STATS.closestCS} - ${STATS.closestType} - ${STATS.closestReg})</span>` : "-";
   document.getElementById("statsTotalLogged").textContent = STATS.uniqueFlights.size;
 }
 
@@ -1872,8 +1922,14 @@ function updateTrailHistory(flights) {
   });
   
   for (const [icao24, entry] of trailHistory) {
-    if (!seen.has(icao24) && (now - entry.lastSeen) > 60000) {
-      trailHistory.delete(icao24);
+    if (!seen.has(icao24)) {
+      const lastPt = entry.points[entry.points.length - 1];
+      const dist = haversineKm(CONFIG.CENTER_LAT, CONFIG.CENTER_LON, lastPt.lat, lastPt.lon);
+      const isOutsideQuery = dist > (CONFIG.RADIUS_KM + 5);
+      const maxAge = isOutsideQuery ? 600000 : 60000; // 10 mins if zoomed out, 1 min if inside
+      if ((now - entry.lastSeen) > maxAge) {
+        trailHistory.delete(icao24);
+      }
     }
   }
   
@@ -2213,7 +2269,7 @@ function renderRadar(flights) {
     const r = (maxR / 4) * i;
     html += `<circle class="ring" cx="${cx}" cy="${cy}" r="${r}" />`;
     const labelText = fmtDist((CONFIG.RADIUS_KM / 4) * i);
-    html += `<text x="${cx + 4}" y="${cy - r + 9}" fill="var(--cyan-dim)" font-family="var(--mono)" font-size="7.5px" opacity="0.6" style="pointer-events:none;">${labelText}</text>`;
+    html += `<text x="${cx + 4}" y="${cy - r + 9}" fill="var(--slate-bright)" font-family="var(--mono)" font-size="8px" opacity="0.85" style="pointer-events:none;">${labelText}</text>`;
   });
   html += `<line class="crosshair" x1="${cx}" y1="${cy-maxR}" x2="${cx}" y2="${cy+maxR}" />`;
   html += `<line class="crosshair" x1="${cx-maxR}" y1="${cy}" x2="${cx+maxR}" y2="${cy}" />`;
@@ -2403,7 +2459,7 @@ function renderRadar(flights) {
     });
   }
 
-  // Update Arrival Sequence
+  // Update Arrival & Departure Sequence
   if (apt) {
     const arrivals = flights.filter(f => {
       const cleanCallsign = f.callsign.replace(/\s+/g, "");
@@ -2423,7 +2479,24 @@ function renderRadar(flights) {
         <span><span style="color:var(--slate);">${i+1}.</span> <span style="color:var(--text); font-weight:600;">${a.callsign}</span> <span style="color:var(--slate-bright); font-size:9px;">${a.type||''}</span></span>
         <span style="color:var(--cyan);">${Math.round(a.eta)}m</span>
        </div>`
-    ).join("") : `<div style="color:var(--slate); font-size:9px;">No inbound traffic detected</div>`;
+    ).join("") : `<div style="color:var(--slate); font-size:9px;">No inbound traffic</div>`;
+
+    const departures = flights.filter(f => {
+      const cleanCallsign = f.callsign.replace(/\s+/g, "");
+      const route = routeCache.get(cleanCallsign);
+      const isSydOrig = route && route.origin && (route.origin.iata_code === "SYD" || route.origin.icao_code === "YSSY");
+      const dist = haversineKm(f.lat, f.lon, apt.arpLat, apt.arpLon);
+      return (isSydOrig || dist < 40) && f.altFt < 12000 && f.vrate > 100 && dist > 1;
+    }).map(f => {
+      return { callsign: f.callsign, alt: f.altFt, type: f.typeCode };
+    }).sort((a,b) => a.alt - b.alt).slice(0, 3);
+
+    document.getElementById("departureSequenceList").innerHTML = departures.length ? departures.map((d, i) => 
+      `<div style="display:flex; justify-content:space-between; font-size:10px;">
+        <span><span style="color:var(--slate);">${i+1}.</span> <span style="color:var(--text); font-weight:600;">${d.callsign}</span> <span style="color:var(--slate-bright); font-size:9px;">${d.type||''}</span></span>
+        <span style="color:var(--amber);">${Math.round(d.alt).toLocaleString()}ft</span>
+       </div>`
+    ).join("") : `<div style="color:var(--slate); font-size:9px;">No active departures</div>`;
   }
 
   // 8. Render Segmented Flight Trails
@@ -2982,6 +3055,36 @@ function initSettingsPanel() {
       window.speechSynthesis.speak(testUtter);
     }
   });
+
+  // Brightness / Contrast Slider controls
+  const sliderBrightness = document.getElementById("sliderBrightness");
+  const sliderContrast = document.getElementById("sliderContrast");
+  const valBrightness = document.getElementById("valBrightness");
+  const valContrast = document.getElementById("valContrast");
+
+  function updateFilters() {
+    const b = sliderBrightness.value;
+    const c = sliderContrast.value;
+    valBrightness.textContent = `${b}%`;
+    valContrast.textContent = `${c}%`;
+    document.documentElement.style.setProperty("--radar-brightness", b / 100);
+    document.documentElement.style.setProperty("--radar-contrast", c / 100);
+    try {
+      localStorage.setItem("radar_brightness", b);
+      localStorage.setItem("radar_contrast", c);
+    } catch(e){}
+  }
+
+  sliderBrightness.addEventListener("input", updateFilters);
+  sliderContrast.addEventListener("input", updateFilters);
+
+  try {
+    const savedB = localStorage.getItem("radar_brightness");
+    if (savedB !== null) { sliderBrightness.value = savedB; }
+    const savedC = localStorage.getItem("radar_contrast");
+    if (savedC !== null) { sliderContrast.value = savedC; }
+    updateFilters();
+  } catch(e){}
 
   // Sweep speed picker
   renderSweepPicker();
