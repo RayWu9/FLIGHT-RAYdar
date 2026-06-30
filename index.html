@@ -743,8 +743,11 @@
 <body>
 <svg style="display: none;">
   <defs>
+    <!-- High-Fidelity Private / Business Jet (Learjet/Gulfstream) -->
+    <path id="plane_jet" d="M 0 -12 C 0.7 -12 1 -10 1 -8 L 1 -2 L 1.8 -2 C 2 -2.5 2.5 -2.5 2.5 -2 L 2.5 0 L 1.2 0.5 L 1.2 4 L 9.5 7.5 C 10 7.8 10 8.2 9.5 8.5 L 9 8.5 L 1.2 6 L 1.2 9 L 3.5 11 C 3.8 11.3 3.8 11.6 3.5 11.8 L 0 11 L -3.5 11.8 C -3.8 11.6 -3.8 11.3 -3.5 11 L -1.2 9 L -1.2 6 L -9 8.5 L -9.5 8.5 C -10 8.2 -10 7.8 -9.5 7.5 L -1.2 4 L -1.2 0.5 L -2.5 0 L -2.5 -2 C -2.5 -2.5 -2 -2.5 -1.8 -2 L -1 -2 L -1 -8 C -1 -10 -0.7 -12 0 -12 Z" />
+    
     <!-- High-Fidelity Narrowbody Jet (B737/A320) -->
-    <path id="plane_jet" d="M 0 -15 C 1.2 -15 2 -14 2 -12 L 2 -4 L 4.5 -1.5 L 4.5 -3.5 C 4.5 -4 5.5 -4 5.5 -3.5 L 5.5 0 L 14.5 6 C 15 6.3 15 6.7 14.5 7 L 14 7 L 2 5 L 2 11 L 6 13.5 C 6.5 13.8 6.5 14.2 6 14.5 L 0 13.5 L -6 14.5 C -6.5 14.2 -6.5 13.8 -6 13.5 L -2 11 L -2 5 L -14 7 L -14.5 7 C -15 6.7 -15 6.3 -14.5 6 L -5.5 0 L -5.5 -3.5 C -5.5 -4 -4.5 -4 -4.5 -3.5 L -4.5 -1.5 L -2 -4 L -2 -12 C -2 -14 -1.2 -15 0 -15 Z" />
+    <path id="plane_narrowbody" d="M 0 -15 C 1.2 -15 2 -14 2 -12 L 2 -4 L 4.5 -1.5 L 4.5 -3.5 C 4.5 -4 5.5 -4 5.5 -3.5 L 5.5 0 L 14.5 6 C 15 6.3 15 6.7 14.5 7 L 14 7 L 2 5 L 2 11 L 6 13.5 C 6.5 13.8 6.5 14.2 6 14.5 L 0 13.5 L -6 14.5 C -6.5 14.2 -6.5 13.8 -6 13.5 L -2 11 L -2 5 L -14 7 L -14.5 7 C -15 6.7 -15 6.3 -14.5 6 L -5.5 0 L -5.5 -3.5 C -5.5 -4 -4.5 -4 -4.5 -3.5 L -4.5 -1.5 L -2 -4 L -2 -12 C -2 -14 -1.2 -15 0 -15 Z" />
     
     <!-- High-Fidelity Widebody / Heavy Jet (B777/A350/B787) -->
     <path id="plane_widebody" d="M 0 -18 C 1.5 -18 2.5 -16 2.5 -12 L 2.5 -3 L 5.5 -0.5 L 5.5 -3 C 5.5 -4 7 -4 7 -3 L 7 1 L 18 8.5 C 19 9 19 9.5 18 10 L 17 10 L 2.5 7 L 2.5 13 L 7 17 C 8 17.5 8 18 7 18.5 L 0 17 L -7 18.5 C -8 18 -8 17.5 -7 17 L -2.5 13 L -2.5 7 L -17 10 L -18 10 C -19 9.5 -19 9 -18 8.5 L -7 1 L -7 -3 C -7 -4 -5.5 -4 -5.5 -3 L -5.5 -0.5 L -2.5 -3 L -2.5 -12 C -2.5 -16 -1.5 -18 0 -18 Z" />
@@ -767,8 +770,8 @@
     <!-- Fighter Jet -->
     <path id="plane_fighter" d="M 0 -10 L 1 -5 L 2.5 -4 L 6 3 L 6 4.5 L 1.5 4 L 1.5 8 L 3.5 9 L 3.5 10 L 0 9 L -3.5 10 L -3.5 9 L -1.5 8 L -1.5 4 L -6 4.5 L -6 3 L -2.5 -4 L -1 -5 Z" />
     
-    <!-- Default (Fallback to standard jet) -->
-    <use id="plane_default" href="#plane_jet" />
+    <!-- Default (Fallback to narrowbody airliner) -->
+    <use id="plane_default" href="#plane_narrowbody" />
   </defs>
 </svg>
 <div id="app">
@@ -1632,6 +1635,7 @@ function parseStates(raw) {
         reg: a.r || null,
         typeCode: a.t || null,
         typeDesc: a.desc || null,
+        category: a.category || null,
         operator: a.ownOp || null,
         mil: !!a.mil,
         lon, lat,
@@ -1778,15 +1782,34 @@ function vrateInfo(vrate) {
 function getAircraftCategory(f) {
   const desc = f.typeDesc ? f.typeDesc.toUpperCase() : "";
   const code = f.typeCode ? f.typeCode.toUpperCase() : "";
+  const cat = f.category ? String(f.category).toUpperCase() : "";
+
+  // 1. Explicit model check overrides
   if (code === "A388") return "a380";
   if (code.startsWith("B74")) return "b747";
-  if (desc.startsWith("H")) return "helicopter";
+  
+  // 2. Helicopter checks
+  if (desc.startsWith("H") || cat === "B1" || cat === "7") return "helicopter";
+  
+  // 3. Military / Fighter Jet checks
   const isFighterCode = /^(F14|F15|F16|F18|F22|F35|FA18|A10|TYF|JSF|MIG|SU)/.test(code);
-  if (isFighterCode || (f.mil && desc.endsWith("J"))) return "fighter";
+  if (isFighterCode || (f.mil && desc.endsWith("J")) || cat === "A7" || cat === "6") return "fighter";
+  
+  // 4. Widebody Twin-Aisle checks
   const isWidebodyCode = /^(A33|A34|A35|A38|B74|B76|B77|B78)/.test(code);
-  if (desc.startsWith("L4J") || desc.startsWith("L3J") || isWidebodyCode) return "widebody";
+  if (desc.startsWith("L4J") || desc.startsWith("L3J") || isWidebodyCode || cat === "A5" || cat === "5") return "widebody";
+  
+  // 5. Turboprop checks
   if (desc.endsWith("T")) return "turboprop";
-  if (desc.endsWith("P") || desc.startsWith("L1") || desc.startsWith("L0")) return "light";
+  
+  // 6. Light Aircraft / General Aviation
+  const isLightDesc = desc.endsWith("P") || desc.startsWith("L1") || desc.startsWith("L0");
+  if (isLightDesc || cat === "A1" || cat === "1" || cat === "B2" || cat === "B3" || cat === "B4") return "light";
+  
+  // 7. Narrowbody Jet vs standard Jet
+  const isNarrowbodyCode = /^(A31|A32|A30|B73|B75|MD8|MD9|E1|E7|E9|CRJ|BCS)/.test(code);
+  if (isNarrowbodyCode || desc.startsWith("L2J") || cat === "A3" || cat === "3" || cat === "A2" || cat === "2") return "narrowbody";
+  
   if (desc.endsWith("J")) return "jet";
   return "default";
 }
@@ -2451,7 +2474,9 @@ function renderRadar(flights) {
     const shapeId = `#plane_${category}`;
     
     // Scale SVG down properly so it's not gigantic, and stroke width scales inversely
-    const scale = category === 'a380' ? 0.6 : (category === 'widebody' ? 0.55 : 0.45);
+    const scale = (category === 'a380' || category === 'b747') ? 0.6 :
+                  (category === 'widebody' ? 0.55 :
+                  (category === 'narrowbody' ? 0.5 : 0.45));
     const strokeColor = isLocked ? "#5FD4D4" : "#0B0F14";
     const strokeWidth = (isLocked ? 2 : 1) / scale;
 
