@@ -739,6 +739,14 @@
     --descend: #29B351;
     --purple: #D1FAE5;
   }
+  @keyframes pulseEmergency {
+    0% { background-color: rgba(220, 38, 38, 0.95); box-shadow: 0 0 10px rgba(220, 38, 38, 0.5); }
+    50% { background-color: rgba(153, 27, 27, 0.95); box-shadow: 0 0 20px rgba(153, 27, 27, 0.8); }
+    100% { background-color: rgba(220, 38, 38, 0.95); box-shadow: 0 0 10px rgba(220, 38, 38, 0.5); }
+  }
+  .emergency-pulse {
+    animation: pulseEmergency 1.5s infinite;
+  }
 </style>
 </head>
 <body>
@@ -864,15 +872,17 @@
                 </select>
               </div>
             </div>
-          </div>
-
-          <!-- Sound alert Mode -->
-          <div class="loc-custom">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <span class="lbl" style="margin-bottom: 0;">NEARBY AUDIO ALERTS</span>
-              <button class="pill-btn" id="soundToggleBtn">SOUND: OFF</button>
+                    <!-- Controls & Audio Alerts -->
+          <div class="loc-custom" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; min-width: 130px;">
+              <span class="lbl" style="margin-bottom: 0; font-size: 9.5px;">RUNWAY GUIDES</span>
+              <button class="pill-btn active" id="runwayGuidesToggleBtn" style="font-size: 9px; padding: 4px 6px;">GUIDES: ON</button>
             </div>
-          </div>
+            <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; min-width: 130px;">
+              <span class="lbl" style="margin-bottom: 0; font-size: 9.5px;">AUDIO ALERTS</span>
+              <button class="pill-btn" id="soundToggleBtn" style="font-size: 9px; padding: 4px 6px;">SOUND: OFF</button>
+            </div>
+          </div>  </div>
 
           <!-- Sweep Speed -->
           <div class="loc-custom">
@@ -883,23 +893,35 @@
 
           <!-- Session Statistics -->
           <div class="loc-custom">
-            <div class="lbl">SESSION STATISTICS</div>
-            <div class="nb-grid" style="margin-top: 4px; padding-top: 0; border-top: none;">
-              <div class="nb-grid-item">
-                <span class="lbl" style="font-size: 7.5px;">Top Speed</span>
-                <span class="val" id="statsMaxSpeed">—</span>
+            <div class="lbl">SESSION RECORDS LEADERBOARD</div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-family: var(--mono); font-size: 10px; margin-top: 6px;">
+              <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">
+                <div style="display:flex; justify-content:space-between; color:var(--slate-bright); font-size:8px;">SPEED DEMON</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;" id="statsMaxSpeed">
+                  <span style="color:var(--amber); font-weight:700;">—</span>
+                </div>
               </div>
-              <div class="nb-grid-item">
-                <span class="lbl" style="font-size: 7.5px;">Max Altitude</span>
-                <span class="val" id="statsMaxAlt">—</span>
+              <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">
+                <div style="display:flex; justify-content:space-between; color:var(--slate-bright); font-size:8px;">STRATOSPHERE</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;" id="statsMaxAlt">
+                  <span style="color:var(--cyan); font-weight:700;">—</span>
+                </div>
               </div>
-              <div class="nb-grid-item">
-                <span class="lbl" style="font-size: 7.5px;">Closest Flight</span>
-                <span class="val" id="statsClosestDist">—</span>
+              <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">
+                <div style="display:flex; justify-content:space-between; color:var(--slate-bright); font-size:8px;">PROXIMITY WARNING</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;" id="statsClosestDist">
+                  <span style="color:var(--climb); font-weight:700;">—</span>
+                </div>
               </div>
-              <div class="nb-grid-item">
-                <span class="lbl" style="font-size: 7.5px;">Total Logged</span>
-                <span class="val" id="statsTotalLogged">—</span>
+              <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">
+                <div style="display:flex; justify-content:space-between; color:var(--slate-bright); font-size:8px;">MARATHON FLIGHT</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;" id="statsLongestTracked">
+                  <span style="color:var(--text); font-weight:700;">—</span>
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--slate-bright);">
+                <span>TOTAL LOGGED AIRCRAFT</span>
+                <span id="statsTotalLogged" style="color:var(--text); font-weight:bold;">0</span>
               </div>
             </div>
           </div>
@@ -1114,7 +1136,7 @@
     <span id="countCount">0 AIRCRAFT TRACKED</span>
   </footer>
 </div>
-<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.4.0.0 (Premium)</div>
+<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.0 (Premium)</div>
 
 <script>
 /* ============================================================
@@ -1131,7 +1153,39 @@ const CONFIG = {
   HIDE_GROUND: true,        // filter out altitude-0 / on-ground traffic
   UNITS: "metric",          // "metric" (km, m) or "imperial" (mi, ft) — speed/distance toggle
   SHOW_HOTSPOTS: false,     // session-wide flight path accumulator
+  SHOW_RUNWAY_GUIDES: true, // show precision runway centerline landing guides
   RADAR_ONLY: false         // radar-only viewport mode
+};
+
+// Compact offline route fallback database for Australian / major Sydney flights
+const LOCAL_ROUTE_DB = {
+  "QFA11": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "LAX", municipality: "Los Angeles", country: "United States" } },
+  "QFA12": { origin: { iata_code: "LAX", municipality: "Los Angeles" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "QFA1": { origin: { iata_code: "SIN", municipality: "Singapore" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "QFA2": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "SIN", municipality: "Singapore", country: "Singapore" } },
+  "QFA3": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "HND", municipality: "Tokyo", country: "Japan" } },
+  "QFA4": { origin: { iata_code: "HND", municipality: "Tokyo" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "QFA400": { origin: { iata_code: "MEL", municipality: "Melbourne" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "QFA401": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "MEL", municipality: "Melbourne", country: "Australia" } },
+  "QFA402": { origin: { iata_code: "MEL", municipality: "Melbourne" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "QFA403": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "MEL", municipality: "Melbourne", country: "Australia" } },
+  "QFA410": { origin: { iata_code: "MEL", municipality: "Melbourne" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "QFA411": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "MEL", municipality: "Melbourne", country: "Australia" } },
+  "VOZ802": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "MEL", municipality: "Melbourne", country: "Australia" } },
+  "VOZ811": { origin: { iata_code: "MEL", municipality: "Melbourne" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "JST500": { origin: { iata_code: "MEL", municipality: "Melbourne" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "JST501": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "MEL", municipality: "Melbourne", country: "Australia" } },
+  "JST502": { origin: { iata_code: "MEL", municipality: "Melbourne" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "SIA281": { origin: { iata_code: "SIN", municipality: "Singapore" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "SIA282": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "SIN", municipality: "Singapore", country: "Singapore" } },
+  "CPA101": { origin: { iata_code: "HKG", municipality: "Hong Kong" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "CPA102": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "HKG", municipality: "Hong Kong", country: "Hong Kong" } },
+  "ANZ101": { origin: { iata_code: "AKL", municipality: "Auckland" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "ANZ102": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "AKL", municipality: "Auckland", country: "New Zealand" } },
+  "UAE414": { origin: { iata_code: "DXB", municipality: "Dubai" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "UAE415": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "DXB", municipality: "Dubai", country: "United Arab Emirates" } },
+  "UAL101": { origin: { iata_code: "SFO", municipality: "San Francisco" }, destination: { iata_code: "SYD", municipality: "Sydney", country: "Australia" } },
+  "UAL102": { origin: { iata_code: "SYD", municipality: "Sydney" }, destination: { iata_code: "SFO", municipality: "San Francisco", country: "United States" } }
 };
 
 // Quick-pick presets shown in the location dropdown
@@ -1602,6 +1656,17 @@ async function fetchRoute(callsign) {
   const clean = callsign.replace(/\s+/g, "");
   if (routeCache.has(clean) || pendingRouteFetches.has(clean)) return;
 
+  // Instant local fallback populate
+  if (LOCAL_ROUTE_DB[clean]) {
+    routeCache.set(clean, LOCAL_ROUTE_DB[clean]);
+    if (lastGoodData) {
+      const flights = parseStates(lastGoodData);
+      renderBoard(flights);
+      renderDetailPanel(flights);
+      renderRadar(flights);
+    }
+  }
+
   pendingRouteFetches.add(clean);
   try {
     const res = await fetch(`https://api.adsbdb.com/v0/callsign/${clean}`);
@@ -1691,23 +1756,29 @@ function parseStates(raw) {
       };
     });
 
-  // Handle Emergency Banner
-  const em = parsed.some(f => f.isEmergency);
-  if (em && !emergencyActive) {
-    emergencyActive = true;
-    let banner = document.getElementById("emergencyBanner");
+  // Handle Pulsing Emergency Warning Banner
+  const emergencyFlights = parsed.filter(f => ["7700", "7600", "7500"].includes(f.squawk));
+  const emBanner = document.getElementById("emergencyBanner");
+  
+  if (emergencyFlights.length > 0) {
+    let banner = emBanner;
     if (!banner) {
       banner = document.createElement("div");
       banner.id = "emergencyBanner";
-      banner.style.cssText = "position:absolute;top:0;left:0;width:100%;background:rgba(255,0,0,0.8);color:#fff;text-align:center;padding:5px;font-weight:bold;z-index:9999;font-family:var(--mono);";
-      banner.innerHTML = "⚠️ EMERGENCY SQUAWK DETECTED ⚠️";
+      banner.className = "emergency-pulse";
+      banner.style.cssText = "position:absolute;top:0;left:0;width:100%;color:#fff;text-align:center;padding:8px;font-weight:bold;z-index:9999;font-family:var(--mono);font-size:11px;letter-spacing:0.05em;border-bottom:1px solid rgba(255,255,255,0.25);pointer-events:auto;";
       document.body.appendChild(banner);
     }
     banner.style.display = "block";
-  } else if (!em && emergencyActive) {
-    emergencyActive = false;
-    const banner = document.getElementById("emergencyBanner");
-    if (banner) banner.style.display = "none";
+    banner.innerHTML = emergencyFlights.map(f => {
+      let typeLabel = "EMERGENCY";
+      if (f.squawk === "7600") typeLabel = "RADIO FAIL";
+      else if (f.squawk === "7500") typeLabel = "UNLAWFUL INTERFERENCE";
+      const acDesc = f.typeCode ? ` [${f.typeCode}]` : "";
+      return `⚠️ ${typeLabel} (${f.squawk}): ${f.callsign}${acDesc} ⚠️`;
+    }).join(" | ");
+  } else {
+    if (emBanner) emBanner.style.display = "none";
   }
 
   // Zero-speed tracking & cleanup
@@ -1802,6 +1873,17 @@ function updateStatsAndAlerts(flights) {
     if (f.altFt !== null && f.altFt > rec.maxAlt) rec.maxAlt = f.altFt;
     if (f.spdKt !== null && f.spdKt > rec.maxSpeed) rec.maxSpeed = f.spdKt;
     if (f.distKm !== null && f.distKm < rec.closestDist) rec.closestDist = f.distKm;
+    
+    // Marathon flight point tracking
+    const hist = trailHistory.get(f.icao24);
+    const ptCount = hist ? hist.points.length : 0;
+    if (ptCount > STATS.longestPoints) {
+      STATS.longestPoints = ptCount;
+      STATS.longestCS = f.callsign;
+      STATS.longestType = f.typeCode || "Unknown";
+      STATS.longestReg = f.reg || "Unknown";
+    }
+    
     flightRecords.set(f.icao24, rec);
 
     if (soundAlertMode && f.distKm <= 4 && !announcedFlights.has(f.callsign)) {
@@ -1819,9 +1901,10 @@ function updateStatsAndAlerts(flights) {
   });
   const speedUnit = CONFIG.UNITS === "imperial" ? "mph" : "km/h";
   const altUnit = CONFIG.UNITS === "imperial" ? "ft" : "m";
-  document.getElementById("statsMaxSpeed").innerHTML = STATS.maxSpeed ? `${STATS.maxSpeed} ${speedUnit} <span style="font-size:8.5px; color:var(--cyan); font-weight:600; display:block;">(${STATS.maxSpeedCS} - ${STATS.maxSpeedType} - ${STATS.maxSpeedReg})</span>` : "-";
-  document.getElementById("statsMaxAlt").innerHTML = STATS.maxAlt ? `${STATS.maxAlt.toLocaleString()} ${altUnit} <span style="font-size:8.5px; color:var(--cyan); font-weight:600; display:block;">(${STATS.maxAltCS} - ${STATS.maxAltType} - ${STATS.maxAltReg})</span>` : "-";
-  document.getElementById("statsClosestDist").innerHTML = STATS.closestDist !== Infinity ? `${fmtDist(STATS.closestDist)} <span style="font-size:8.5px; color:var(--cyan); font-weight:600; display:block;">(${STATS.closestCS} - ${STATS.closestType} - ${STATS.closestReg})</span>` : "-";
+  document.getElementById("statsMaxSpeed").innerHTML = STATS.maxSpeed ? `<span style="color:var(--amber); font-weight:700;">${STATS.maxSpeed} ${speedUnit}</span> <span style="font-size:8.5px; color:var(--slate-bright); display:block; margin-top:2px;">(${STATS.maxSpeedCS} - ${STATS.maxSpeedType} - ${STATS.maxSpeedReg})</span>` : "—";
+  document.getElementById("statsMaxAlt").innerHTML = STATS.maxAlt ? `<span style="color:var(--cyan); font-weight:700;">${STATS.maxAlt.toLocaleString()} ${altUnit}</span> <span style="font-size:8.5px; color:var(--slate-bright); display:block; margin-top:2px;">(${STATS.maxAltCS} - ${STATS.maxAltType} - ${STATS.maxAltReg})</span>` : "—";
+  document.getElementById("statsClosestDist").innerHTML = STATS.closestDist !== Infinity ? `<span style="color:var(--climb); font-weight:700;">${fmtDist(STATS.closestDist)}</span> <span style="font-size:8.5px; color:var(--slate-bright); display:block; margin-top:2px;">(${STATS.closestCS} - ${STATS.closestType} - ${STATS.closestReg})</span>` : "—";
+  document.getElementById("statsLongestTracked").innerHTML = STATS.longestPoints > 0 ? `<span style="color:var(--text); font-weight:700;">${STATS.longestPoints} pts</span> <span style="font-size:8.5px; color:var(--slate-bright); display:block; margin-top:2px;">(${STATS.longestCS} - ${STATS.longestType} - ${STATS.longestReg})</span>` : "—";
   document.getElementById("statsTotalLogged").textContent = STATS.uniqueFlights.size;
 }
 
@@ -2471,6 +2554,27 @@ function renderRadar(flights) {
     });
   }
 
+  // 8.5 Runway Landing Guides
+  if (CONFIG.SHOW_RUNWAY_GUIDES && apt) {
+    const centerlines = getRunwayCenterlines();
+    centerlines.forEach(rw => {
+      const established = flights.some(f => isEstablishedOnILS(f, rw));
+      const pThresh = getPoint(rw.thresh.lat, rw.thresh.lon);
+      const pOuter = getPoint(rw.outer.lat, rw.outer.lon);
+      
+      const color = established ? "#10B981" : "var(--slate)";
+      const opacity = established ? 0.8 : 0.2;
+      const strokeWidth = established ? 2.5 : 1.2;
+      const dash = established ? "none" : "3,4";
+      
+      html += `<line x1="${pThresh.x}" y1="${pThresh.y}" x2="${pOuter.x}" y2="${pOuter.y}" 
+                     stroke="${color}" stroke-width="${strokeWidth}" stroke-dasharray="${dash}" opacity="${opacity}" stroke-linecap="round" />`;
+      if (established) {
+        html += `<text x="${pOuter.x}" y="${pOuter.y - 6}" fill="#10B981" font-family="var(--mono)" font-size="7.5px" font-weight="700" text-anchor="middle" opacity="0.9">ILS EST ${rw.name}</text>`;
+      }
+    });
+  }
+
   // Update Arrival & Departure Sequence
   if (apt) {
     const arrivals = flights.filter(f => {
@@ -3059,6 +3163,29 @@ function initSettingsPanel() {
     }
   });
 
+  // Runway Guides toggle
+  const runwayGuidesToggleBtn = document.getElementById("runwayGuidesToggleBtn");
+  if (runwayGuidesToggleBtn) {
+    try {
+      const savedGuides = localStorage.getItem("flightwall_show_runway_guides");
+      if (savedGuides === "false") {
+        CONFIG.SHOW_RUNWAY_GUIDES = false;
+        runwayGuidesToggleBtn.classList.remove("active");
+        runwayGuidesToggleBtn.textContent = "GUIDES: OFF";
+      }
+    } catch(e){}
+    
+    runwayGuidesToggleBtn.addEventListener("click", () => {
+      CONFIG.SHOW_RUNWAY_GUIDES = !CONFIG.SHOW_RUNWAY_GUIDES;
+      runwayGuidesToggleBtn.classList.toggle("active", CONFIG.SHOW_RUNWAY_GUIDES);
+      runwayGuidesToggleBtn.textContent = CONFIG.SHOW_RUNWAY_GUIDES ? "GUIDES: ON" : "GUIDES: OFF";
+      try { localStorage.setItem("flightwall_show_runway_guides", String(CONFIG.SHOW_RUNWAY_GUIDES)); } catch(e){}
+      if (lastGoodData) {
+        renderRadar(parseStates(lastGoodData));
+      }
+    });
+  }
+
   // Brightness / Contrast Slider controls
   const sliderBrightness = document.getElementById("sliderBrightness");
   const sliderContrast = document.getElementById("sliderContrast");
@@ -3126,6 +3253,65 @@ try {
 /* ============================================================
    SYD Movements Panel Session Tracking
    ============================================================ */
+const STATS = {
+  maxSpeed: 0,
+  maxSpeedCS: "",
+  maxSpeedType: "",
+  maxSpeedReg: "",
+  maxAlt: 0,
+  maxAltCS: "",
+  maxAltType: "",
+  maxAltReg: "",
+  closestDist: Infinity,
+  closestCS: "",
+  closestType: "",
+  closestReg: "",
+  longestPoints: 0,
+  longestCS: "",
+  longestType: "",
+  longestReg: "",
+  uniqueFlights: new Set()
+};
+
+// YSSY runway centerline alignment calculations
+function getRunwayCenterlines() {
+  const apt = AIRPORT_RUNWAYS["-33.94,151.18"];
+  if (!apt) return [];
+  const centerlines = [];
+  apt.runways.forEach(rw => {
+    if (rw.name === "07/25") return;
+    const centerPt = latLonFromBearing(apt.arpLat, apt.arpLon, rw.offsetDir, rw.offsetM / 1000);
+    const halfLenKm = (rw.lengthM / 2) / 1000;
+    
+    const thresh16 = latLonFromBearing(centerPt.lat, centerPt.lon, (rw.bearing + 180) % 360, halfLenKm);
+    const outer16 = latLonFromBearing(thresh16.lat, thresh16.lon, (rw.bearing + 180) % 360, 15);
+    
+    const thresh34 = latLonFromBearing(centerPt.lat, centerPt.lon, rw.bearing, halfLenKm);
+    const outer34 = latLonFromBearing(thresh34.lat, thresh34.lon, rw.bearing, 15);
+    
+    centerlines.push({ name: rw.name.split("/")[0], thresh: thresh16, outer: outer16, bearing: rw.bearing });
+    centerlines.push({ name: rw.name.split("/")[1], thresh: thresh34, outer: outer34, bearing: (rw.bearing + 180) % 360 });
+  });
+  return centerlines;
+}
+
+function isEstablishedOnILS(f, rw) {
+  if (f.altFt == null || f.altFt > 4000 || f.track == null) return false;
+  let hdgDiff = Math.abs(f.track - rw.bearing);
+  if (hdgDiff > 180) hdgDiff = 360 - hdgDiff;
+  if (hdgDiff > 5) return false;
+  
+  const dist = haversineKm(rw.thresh.lat, rw.thresh.lon, f.lat, f.lon);
+  if (dist > 16 || dist < 0.2) return false;
+  
+  const brgToAc = bearingFromCenter(rw.thresh.lat, rw.thresh.lon, f.lat, f.lon);
+  let devDeg = Math.abs(brgToAc - ((rw.bearing + 180) % 360));
+  if (devDeg > 180) devDeg = 360 - devDeg;
+  
+  const lateralOffsetKm = dist * Math.sin(devDeg * Math.PI / 180);
+  return lateralOffsetKm < 0.35;
+}
+
 const SYD_SCHEDULE_PATTERNS = [
   { airline: "Qantas", prefix: "QFA", dests: ["MEL", "BNE", "SIN", "LAX", "HND", "AKL", "ADL", "PER"], type: "B738" },
   { airline: "Virgin Australia", prefix: "VOZ", dests: ["MEL", "BNE", "OOL", "CNS", "ADL", "PER"], type: "B738" },
