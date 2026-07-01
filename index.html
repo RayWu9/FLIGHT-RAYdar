@@ -1136,7 +1136,7 @@
     <span id="countCount">0 AIRCRAFT TRACKED</span>
   </footer>
 </div>
-<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.0 (Premium)</div>
+<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.1 (Premium)</div>
 
 <script>
 /* ============================================================
@@ -1226,6 +1226,10 @@ const STATS = {
   closestCS: "",
   closestType: "",
   closestReg: "",
+  longestPoints: 0,
+  longestCS: "",
+  longestType: "",
+  longestReg: "",
   uniqueFlights: new Set()
 };
 
@@ -1233,8 +1237,8 @@ const STATS = {
 const flightRecords = new Map();
 
 // SYD arrivals/departures movement log
-const sydMovements = [];
-const SYD_MOVEMENT_MAX = 30;
+
+
 
 // Sweep speed options
 const SWEEP_OPTIONS = [4, 8, 15, 30];
@@ -3253,25 +3257,6 @@ try {
 /* ============================================================
    SYD Movements Panel Session Tracking
    ============================================================ */
-const STATS = {
-  maxSpeed: 0,
-  maxSpeedCS: "",
-  maxSpeedType: "",
-  maxSpeedReg: "",
-  maxAlt: 0,
-  maxAltCS: "",
-  maxAltType: "",
-  maxAltReg: "",
-  closestDist: Infinity,
-  closestCS: "",
-  closestType: "",
-  closestReg: "",
-  longestPoints: 0,
-  longestCS: "",
-  longestType: "",
-  longestReg: "",
-  uniqueFlights: new Set()
-};
 
 // YSSY runway centerline alignment calculations
 function getRunwayCenterlines() {
