@@ -1136,7 +1136,7 @@
     <span id="countCount">0 AIRCRAFT TRACKED</span>
   </footer>
 </div>
-<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.1 (Premium)</div>
+<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.2 (Premium)</div>
 
 <script>
 /* ============================================================
@@ -1529,14 +1529,6 @@ const AIRPORT_RUNWAYS = {
       }
     }
   } catch (e) {}
-
-  // Slider Listeners
-  document.getElementById("brightnessSlider").addEventListener("input", (e) => {
-    document.getElementById("radar-svg").style.opacity = e.target.value;
-  });
-  document.getElementById("contrastSlider").addEventListener("input", (e) => {
-    document.documentElement.style.filter = `contrast(${e.target.value})`;
-  });
 })();
 
 /* ============================================================
