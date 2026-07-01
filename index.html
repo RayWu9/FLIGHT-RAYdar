@@ -1136,7 +1136,7 @@
     <span id="countCount">0 AIRCRAFT TRACKED</span>
   </footer>
 </div>
-<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.3 (Premium)</div>
+<div id="versionControl" style="position:fixed; bottom: 10px; right: 10px; color: var(--cyan-dim); font-family: var(--mono); font-size: 9px; opacity: 0.6; z-index: 999; pointer-events:none;">RAYdar v1.5.0.4 (Premium)</div>
 
 <script>
 /* ============================================================
@@ -3256,7 +3256,7 @@ function getRunwayCenterlines() {
   if (!apt) return [];
   const centerlines = [];
   apt.runways.forEach(rw => {
-    if (rw.name === "07/25") return;
+    if (rw.labels.includes("07") || rw.labels.includes("25")) return;
     const centerPt = latLonFromBearing(apt.arpLat, apt.arpLon, rw.offsetDir, rw.offsetM / 1000);
     const halfLenKm = (rw.lengthM / 2) / 1000;
     
@@ -3266,8 +3266,8 @@ function getRunwayCenterlines() {
     const thresh34 = latLonFromBearing(centerPt.lat, centerPt.lon, rw.bearing, halfLenKm);
     const outer34 = latLonFromBearing(thresh34.lat, thresh34.lon, rw.bearing, 15);
     
-    centerlines.push({ name: rw.name.split("/")[0], thresh: thresh16, outer: outer16, bearing: rw.bearing });
-    centerlines.push({ name: rw.name.split("/")[1], thresh: thresh34, outer: outer34, bearing: (rw.bearing + 180) % 360 });
+    centerlines.push({ name: rw.labels[0], thresh: thresh16, outer: outer16, bearing: rw.bearing });
+    centerlines.push({ name: rw.labels[1], thresh: thresh34, outer: outer34, bearing: (rw.bearing + 180) % 360 });
   });
   return centerlines;
 }
